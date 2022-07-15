@@ -9,9 +9,9 @@ package com.github.castorm.kafka.connect.http.auth;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,14 +20,13 @@ package com.github.castorm.kafka.connect.http.auth;
  * #L%
  */
 
-import com.github.castorm.kafka.connect.http.auth.spi.HttpAuthenticator;
-import okhttp3.Credentials;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
+import com.github.castorm.kafka.connect.http.auth.spi.HttpAuthenticator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import okhttp3.Credentials;
 
 public class BasicHttpAuthenticator implements HttpAuthenticator {
 
@@ -49,7 +48,8 @@ public class BasicHttpAuthenticator implements HttpAuthenticator {
         BasicHttpAuthenticatorConfig config = configFactory.apply(configs);
 
         if (!isEmpty(config.getUser()) || !isEmpty(config.getPassword().value())) {
-            header = Optional.of(Credentials.basic(config.getUser(), config.getPassword().value()));
+            header = Optional.of(
+                    Credentials.basic(config.getUser(), config.getPassword().value()));
         } else {
             header = Optional.empty();
         }

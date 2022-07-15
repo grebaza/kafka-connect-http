@@ -20,14 +20,13 @@ package com.github.castorm.kafka.connect.http.request.template.freemarker;
  * #L%
  */
 
-import com.github.castorm.kafka.connect.http.model.Offset;
-import com.google.common.collect.ImmutableMap;
-import org.junit.jupiter.api.Test;
-
-import java.time.Instant;
-
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.github.castorm.kafka.connect.http.model.Offset;
+import com.google.common.collect.ImmutableMap;
+import java.time.Instant;
+import org.junit.jupiter.api.Test;
 
 class FreeMarkerTemplateFactoryTest {
 
@@ -53,6 +52,7 @@ class FreeMarkerTemplateFactoryTest {
     @Test
     void givenTemplateWithTimestampAsEpoch_whenApplyValue_thenReplaced() {
         Offset offset = Offset.of(ImmutableMap.of("timestamp", Instant.parse("2020-01-01T00:00:00Z")));
-        assertThat(factory.create("${offset.timestamp?datetime.iso?long}").apply(offset)).isEqualTo("1577836800000");
+        assertThat(factory.create("${offset.timestamp?datetime.iso?long}").apply(offset))
+                .isEqualTo("1577836800000");
     }
 }

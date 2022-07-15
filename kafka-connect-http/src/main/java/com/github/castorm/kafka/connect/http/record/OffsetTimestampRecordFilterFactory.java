@@ -9,9 +9,9 @@ package com.github.castorm.kafka.connect.http.record;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,18 +22,18 @@ package com.github.castorm.kafka.connect.http.record;
 
 import com.github.castorm.kafka.connect.http.model.Offset;
 import com.github.castorm.kafka.connect.http.record.spi.SourceRecordFilterFactory;
-import lombok.RequiredArgsConstructor;
-import org.apache.kafka.connect.source.SourceRecord;
-
 import java.time.Instant;
 import java.util.function.Predicate;
+import lombok.RequiredArgsConstructor;
+import org.apache.kafka.connect.source.SourceRecord;
 
 @RequiredArgsConstructor
 public class OffsetTimestampRecordFilterFactory implements SourceRecordFilterFactory {
 
     @Override
     public Predicate<SourceRecord> create(Offset offset) {
-        Long offsetTimestampMillis = offset.getTimestamp().map(Instant::toEpochMilli).orElse(0L);
+        Long offsetTimestampMillis =
+                offset.getTimestamp().map(Instant::toEpochMilli).orElse(0L);
         return record -> record.timestamp() > offsetTimestampMillis;
     }
 }

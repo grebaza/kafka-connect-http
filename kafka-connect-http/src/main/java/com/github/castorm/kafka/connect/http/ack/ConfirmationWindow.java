@@ -20,15 +20,14 @@ package com.github.castorm.kafka.connect.http.ack;
  * #L%
  */
 
-import lombok.extern.slf4j.Slf4j;
+import static com.github.castorm.kafka.connect.common.CollectionUtils.toLinkedHashMap;
+import static java.util.function.Function.identity;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import static com.github.castorm.kafka.connect.common.CollectionUtils.toLinkedHashMap;
-import static java.util.function.Function.identity;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ConfirmationWindow<T> {
@@ -36,8 +35,7 @@ public class ConfirmationWindow<T> {
     private final LinkedHashMap<T, Boolean> confirmedOffsets;
 
     public ConfirmationWindow(List<T> offsets) {
-        confirmedOffsets = offsets.stream()
-                .collect(toLinkedHashMap(identity(), __ -> false));
+        confirmedOffsets = offsets.stream().collect(toLinkedHashMap(identity(), __ -> false));
     }
 
     public void confirm(T offset) {
@@ -54,8 +52,10 @@ public class ConfirmationWindow<T> {
             if (offsetWasConfirmed) {
                 offset = sourceOffset;
             } else {
-                log.warn("Found unconfirmed offset {}. Will resume polling from previous offset. " +
-                        "This might result in a number of duplicated records.", sourceOffset);
+                log.warn(
+                        "Found unconfirmed offset {}. Will resume polling from previous offset. "
+                                + "This might result in a number of duplicated records.",
+                        sourceOffset);
                 break;
             }
         }

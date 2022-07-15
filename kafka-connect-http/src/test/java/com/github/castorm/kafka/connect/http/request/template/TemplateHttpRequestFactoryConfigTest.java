@@ -9,9 +9,9 @@ package com.github.castorm.kafka.connect.http.request.template;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,21 +20,20 @@ package com.github.castorm.kafka.connect.http.request.template;
  * #L%
  */
 
-import com.github.castorm.kafka.connect.http.request.template.freemarker.BackwardsCompatibleFreeMarkerTemplateFactory;
-import com.github.castorm.kafka.connect.http.request.template.spi.Template;
-import com.github.castorm.kafka.connect.http.request.template.spi.TemplateFactory;
-import org.apache.kafka.common.config.ConfigException;
-import org.junit.jupiter.api.Test;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import static com.github.castorm.kafka.connect.http.request.template.TemplateHttpRequestFactoryConfigTest.Fixture.config;
 import static com.github.castorm.kafka.connect.http.request.template.TemplateHttpRequestFactoryConfigTest.Fixture.configWithout;
 import static com.github.castorm.kafka.connect.http.request.template.TemplateHttpRequestFactoryConfigTest.Fixture.defaultMap;
 import static com.github.castorm.kafka.connect.http.request.template.TemplateHttpRequestFactoryConfigTest.Fixture.value;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+
+import com.github.castorm.kafka.connect.http.request.template.freemarker.BackwardsCompatibleFreeMarkerTemplateFactory;
+import com.github.castorm.kafka.connect.http.request.template.spi.Template;
+import com.github.castorm.kafka.connect.http.request.template.spi.TemplateFactory;
+import java.util.HashMap;
+import java.util.Map;
+import org.apache.kafka.common.config.ConfigException;
+import org.junit.jupiter.api.Test;
 
 class TemplateHttpRequestFactoryConfigTest {
 
@@ -90,12 +89,15 @@ class TemplateHttpRequestFactoryConfigTest {
 
     @Test
     void whenMissingTemplateFactory_thenDefault() {
-        assertThat(configWithout("http.request.template.factory").getTemplateFactory()).isInstanceOf(BackwardsCompatibleFreeMarkerTemplateFactory.class);
+        assertThat(configWithout("http.request.template.factory").getTemplateFactory())
+                .isInstanceOf(BackwardsCompatibleFreeMarkerTemplateFactory.class);
     }
 
     @Test
     void whenTemplateFactory_thenInitialized() {
-        assertThat(config("http.request.template.factory", TestTemplateFactory.class.getName()).getTemplateFactory()).isInstanceOf(TestTemplateFactory.class);
+        assertThat(config("http.request.template.factory", TestTemplateFactory.class.getName())
+                        .getTemplateFactory())
+                .isInstanceOf(TestTemplateFactory.class);
     }
 
     public static class TestTemplateFactory implements TemplateFactory {
@@ -110,9 +112,11 @@ class TemplateHttpRequestFactoryConfigTest {
         String value = "url";
 
         static Map<String, String> defaultMap() {
-            return new HashMap<String, String>() {{
-                put("http.request.url", "url");
-            }};
+            return new HashMap<String, String>() {
+                {
+                    put("http.request.url", "url");
+                }
+            };
         }
 
         static TemplateHttpRequestFactoryConfig config(String key, String value) {

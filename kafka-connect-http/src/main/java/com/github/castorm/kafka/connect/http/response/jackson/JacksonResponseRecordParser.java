@@ -20,19 +20,18 @@ package com.github.castorm.kafka.connect.http.response.jackson;
  * #L%
  */
 
+import static com.github.castorm.kafka.connect.common.CollectionUtils.merge;
+import static java.util.Collections.emptyMap;
+
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.castorm.kafka.connect.http.response.jackson.model.JacksonRecord;
-import lombok.RequiredArgsConstructor;
-import org.apache.kafka.common.Configurable;
-
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
-
-import static com.github.castorm.kafka.connect.common.CollectionUtils.merge;
-import static java.util.Collections.emptyMap;
+import lombok.RequiredArgsConstructor;
+import org.apache.kafka.common.Configurable;
 
 @RequiredArgsConstructor
 public class JacksonResponseRecordParser implements Configurable {
@@ -65,7 +64,8 @@ public class JacksonResponseRecordParser implements Configurable {
 
         Map<String, Object> responseOffset = getResponseOffset(jsonBody);
 
-        return serializer.getArrayAt(jsonBody, recordsPointer)
+        return serializer
+                .getArrayAt(jsonBody, recordsPointer)
                 .map(jsonRecord -> toJacksonRecord(jsonRecord, responseOffset));
     }
 

@@ -20,20 +20,21 @@ package com.github.castorm.kafka.connect.http.response.jackson;
  * #L%
  */
 
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toMap;
+
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
-import org.apache.kafka.common.Configurable;
-
+import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Function;
-
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toMap;
+import java.util.stream.Stream;
+import lombok.RequiredArgsConstructor;
+import org.apache.kafka.common.Configurable;
 
 @RequiredArgsConstructor
 public class JacksonRecordParser implements Configurable {
@@ -42,10 +43,16 @@ public class JacksonRecordParser implements Configurable {
 
     private final JacksonSerializer serializer;
 
+    private JsonPointer recordsPointer;
     private List<JsonPointer> keyPointer;
     private Optional<JsonPointer> timestampPointer;
     private Map<String, JsonPointer> offsetPointers;
     private JsonPointer valuePointer;
+
+    private Optional<JsonPointer> pagingRootPointer;
+    private Map<String, JsonPointer> pagingNodePointers;
+    private Optional<JsonPointer> metadataRootPointer;
+    private Map<String, JsonPointer> metadataNodePointers;
 
     public JacksonRecordParser() {
         this(new JacksonSerializer(new ObjectMapper()));
@@ -58,15 +65,18 @@ public class JacksonRecordParser implements Configurable {
     @Override
     public void configure(Map<String, ?> settings) {
         JacksonRecordParserConfig config = configFactory.apply(settings);
+        recordsPointer = config.getRecordsPointer();
         keyPointer = config.getKeyPointer();
         valuePointer = config.getValuePointer();
         offsetPointers = config.getOffsetPointers();
         timestampPointer = config.getTimestampPointer();
+        pagingRootPointer = config.getPagingRootPointer();
+        pagingNodePointers = config.getPagingNodePointers();
+        metadataRootPointer = config.getMetadataRootPointer();
+        metadataNodePointers = config.getMetadataNodePointers();
     }
 
-    /**
-     * @deprecated Replaced by Offset
-     */
+    /** @deprecated Replaced by Offset */
     @Deprecated
     Optional<String> getKey(JsonNode node) {
         String key = keyPointer.stream()
@@ -76,23 +86,60 @@ public class JacksonRecordParser implements Configurable {
         return key.isEmpty() ? Optional.empty() : Optional.of(key);
     }
 
-    /**
-     * @deprecated Replaced by Offset
-     */
+    /** @deprecated Replaced by Offset */
     @Deprecated
     Optional<String> getTimestamp(JsonNode node) {
-        return timestampPointer.map(pointer -> serializer.getObjectAt(node, pointer).asText());
+        return timestampPointer.map(
+                pointer -> serializer.getObjectAt(node, pointer).asText());
     }
 
     Map<String, Object> getOffset(JsonNode node) {
-        return offsetPointers.entrySet().stream()
-                .collect(toMap(Entry::getKey, entry -> serializer.getObjectAt(node, entry.getValue()).asText()));
+        return offsetPointers.entrySet().stream().collect(toMap(Entry::getKey, entry -> serializer
+                .getObjectAt(node, entry.getValue())
+                .asText()));
     }
 
     String getValue(JsonNode node) {
-
         JsonNode value = serializer.getObjectAt(node, valuePointer);
 
         return value.isObject() ? serializer.serialize(value) : value.asText();
+    }
+
+    JsonNode getValueObject(JsonNode node) {
+        return serializer.getObjectAt(node, valuePointer);
+    }
+
+    Stream<JsonNode> getRecords(JsonNode node) {
+        return serializer.getArrayAt(node, recordsPointer);
+    }
+
+    /**
+     * Returns Paging only if JsonPointers exist
+     */
+    public Map<String, Object> getPaging(JsonNode node) {
+        final JsonNode fromNode =
+                pagingRootPointer.flatMap(p -> serializer.getAt(node, p)).orElse(node);
+        return getMapFromPointersAtNode(pagingNodePointers, fromNode);
+    }
+
+    /**
+     * Returns Metadata only if JsonPointers exist
+     */
+    public Map<String, Object> getMetadata(JsonNode node) {
+        final JsonNode fromNode =
+                metadataRootPointer.flatMap(p -> serializer.getAt(node, p)).orElse(node);
+        return getMapFromPointersAtNode(metadataNodePointers, fromNode);
+    }
+
+    private Map<String, Object> getMapFromPointersAtNode(Map<String, JsonPointer> pointers, JsonNode node) {
+        return pointers.entrySet().stream()
+                .map(entry -> new AbstractMap.SimpleEntry<>(
+                        entry.getKey(),
+                        serializer
+                                .getAt(node, entry.getValue())
+                                .map(JsonNode::asText)
+                                .orElse(null)))
+                .filter(entry -> entry.getValue() != null)
+                .collect(toMap(Entry::getKey, Entry::getValue));
     }
 }

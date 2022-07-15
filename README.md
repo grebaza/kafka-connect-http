@@ -17,7 +17,7 @@ Kafka Connect connector that enables [Change Data Capture](docs/Change_Data_Capt
 
 ### Examples
 
-See [examples](examples), e.g. 
+See [examples](examples), e.g.
 *   [Jira Issues Search API](examples/jira-issues-search.md)
 *   [Elasticsearch Search API](examples/elasticsearch-search.md)
 
@@ -66,13 +66,16 @@ public List<SourceRecord> poll() throws InterruptedException {
 
     throttler.throttle(offset.getTimestamp().orElseGet(Instant::now));
 
-    HttpRequest request = requestFactory.createRequest(offset);
+    RequestInput requestInput = RequestInput.of(offset, paging, metadata);
+    HttpRequest request = requestFactory.createRequest(requestInput);
 
     HttpResponse response = requestExecutor.execute(request);
 
-    List<SourceRecord> records = responseParser.parse(response);
+    parsedResponse = responseParser.parse(response);
+    paging = parsedResponse.getPaging();
+    metadata = updateMetadata();
 
-    List<SourceRecord> unseenRecords = recordSorter.sort(records).stream()
+    List<SourceRecord> unseenRecords = recordSorter.sort(parsedResponse.getRecords()).stream()
             .filter(recordFilterFactory.create(offset))
             .collect(toList());
 
@@ -101,9 +104,9 @@ Controls the rate at which HTTP requests are performed by informing the task, ho
 > #### `http.timer`
 > ```java
 > public interface Timer extends Configurable {
-> 
+>
 >     Long getRemainingMillis();
-> 
+>
 >     default void reset(Instant lastZero) {
 >         // Do nothing
 >     }
@@ -117,7 +120,7 @@ Controls the rate at which HTTP requests are performed by informing the task, ho
 
 #### Throttling `HttpRequest` with `FixedIntervalThrottler`
 
-Throttles rate of requests based on a fixed interval. 
+Throttles rate of requests based on a fixed interval.
 
 > ##### `http.timer.interval.millis`
 > Interval in between requests
@@ -128,15 +131,15 @@ Throttles rate of requests based on a fixed interval.
 
 Throttles rate of requests based on a fixed interval.
 It has, however, two modes of operation, with two different  intervals:
-*   **Up to date** No new records in last poll, or there were new records, but "recently" created (shorter than interval) 
+*   **Up to date** No new records in last poll, or there were new records, but "recently" created (shorter than interval)
 *   **Catching up** There were new records in last poll, but they were created "long ago" (longer than interval)
 
 > ##### `http.timer.interval.millis`
 > Interval in between requests when up-to-date
-> 
+>
 > *   Type: `Long`
 > *   Default: `60000`
-> 
+>
 > ##### `http.timer.catchup.interval.millis`
 > Interval in between requests when catching up
 > *   Type: `Long`
@@ -152,7 +155,7 @@ The first thing our connector will need to do is creating a `HttpRequest`.
 > #### `http.request.factory`
 > ```java
 > public interface HttpRequestFactory extends Configurable {
-> 
+>
 >     HttpRequest createRequest(Offset offset);
 > }
 > ```
@@ -174,38 +177,38 @@ This `HttpRequestFactory` is based on template resolution.
 > Http method to use in the request.
 > *   Type: `String`
 > *   Default: `GET`
-> 
+>
 > ##### `http.request.url`
 > Http url to use in the request.
 > *   __Required__
 > *   Type: `String`
-> 
+>
 > ##### `http.request.headers`
 > Http headers to use in the request, `,` separated list of `:` separated pairs.
 > *   Example: `Name: Value, Name2: Value2`
 > *   Type: `String`
 > *   Default: `""`
-> 
+>
 > ##### `http.request.params`
 > Http query parameters to use in the request, `&` separated list of `=` separated pairs.
 > *   Example: `name=value & name2=value2`
 > *   Type: `String`
 > *   Default: `""`
-> 
+>
 > ##### `http.request.body`
 > Http body to use in the request.
 > *   Type: `String`
 > *   Default: `""`
-> 
+>
 > ##### `http.request.template.factory`
 > ```java
 > public interface TemplateFactory {
-> 
+>
 >     Template create(String template);
 > }
-> 
+>
 > public interface Template {
-> 
+>
 >     String apply(Offset offset);
 > }
 > ```
@@ -214,7 +217,7 @@ This `HttpRequestFactory` is based on template resolution.
 > *   Default: `com.github.castorm.kafka.connect.http.request.template.freemarker.BackwardsCompatibleFreeMarkerTemplateFactory`
 > *   Available implementations:
 >     *   `com.github.castorm.kafka.connect.http.request.template.freemarker.BackwardsCompatibleFreeMarkerTemplateFactory`
-          Implementation based on [FreeMarker](https://freemarker.apache.org/) which accepts offset properties without 
+          Implementation based on [FreeMarker](https://freemarker.apache.org/) which accepts offset properties without
           `offset` namespace _(Deprecated)_
 >     *   `com.github.castorm.kafka.connect.http.request.template.freemarker.FreeMarkerTemplateFactory`
           Implementation based on [FreeMarker](https://freemarker.apache.org/)
@@ -235,20 +238,20 @@ For an Epoch representation of the same string, FreeMarker built-ins should be u
 ```properties
 http.request.params=after=${offset.timestamp?datetime.iso?long}
 ```
-For a complete understanding of the features provided by FreeMarker, please, refer to the 
+For a complete understanding of the features provided by FreeMarker, please, refer to the
 [User Manual](https://freemarker.apache.org/docs/index.html)
 
 ---
 <a name="client"/>
 
 ### `HttpClient`: Executing a `HttpRequest`
-Once our HttpRequest is ready, we have to execute it to get some results out of it. That's the purpose of the 
+Once our HttpRequest is ready, we have to execute it to get some results out of it. That's the purpose of the
 `HttpClient`
 
 > #### `http.client`
 > ```java
 > public interface HttpClient extends Configurable {
-> 
+>
 >     HttpResponse execute(HttpRequest request) throws IOException;
 > }
 > ```
@@ -258,18 +261,18 @@ Once our HttpRequest is ready, we have to execute it to get some results out of 
 >     *   `com.github.castorm.kafka.connect.http.client.okhttp.OkHttpClient`
 
 #### Executing a `HttpRequest` with `OkHttpClient`
-Uses a [OkHttp](https://square.github.io/okhttp/) client. 
+Uses a [OkHttp](https://square.github.io/okhttp/) client.
 
 > ##### `http.client.connection.timeout.millis`
 > Timeout for opening a connection
 > *   Type: `Long`
 > *   Default: `2000`
-> 
+>
 > ##### `http.client.read.timeout.millis`
 > Timeout for reading a response
 > *   Type: `Long`
 > *   Default: `2000`
-> 
+>
 > ##### `http.client.connection.ttl.millis`
 > Time to live for the connection
 > *   Type: `Long`
@@ -284,7 +287,7 @@ to be included in the `HttpRequest`.
 > #### `http.auth`
 > ```java
 > public interface HttpAuthenticator extends Configurable {
-> 
+>
 >     Optional<String> getAuthorizationHeader();
 > }
 > ```
@@ -318,13 +321,13 @@ Allows selecting the authentication type via configuration property
 <a name="response"/>
 
 ### `HttpResponseParser`: Parsing a `HttpResponse`
-Once our `HttpRequest` has been executed, as a result we'll have to deal with a `HttpResponse` and translate it into 
-the list of `SourceRecord`s expected by Kafka Connect. 
+Once our `HttpRequest` has been executed, as a result we'll have to deal with a `HttpResponse` and translate it into
+the list of `SourceRecord`s expected by Kafka Connect.
 
 > #### `http.response.parser`
 > ```java
 > public interface HttpResponseParser extends Configurable {
-> 
+>
 >     List<SourceRecord> parse(HttpResponse response);
 > }
 > ```
@@ -336,7 +339,7 @@ the list of `SourceRecord`s expected by Kafka Connect.
 
 #### Parsing with `PolicyHttpResponseParser`
 Vets the HTTP response deciding whether the response should be processed, skipped or failed. This decision is delegated
-to a `HttpResponsePolicy`. 
+to a `HttpResponsePolicy`.
 When the decision is to process the response, this processing is delegated to a secondary `HttpResponseParser`.
 
 ##### `HttpResponsePolicy`: Vetting a `HttpResponse`
@@ -344,9 +347,9 @@ When the decision is to process the response, this processing is delegated to a 
 > ##### `http.response.policy`
 > ```java
 > public interface HttpResponsePolicy extends Configurable {
-> 
+>
 >     HttpResponseOutcome resolve(HttpResponse response);
-> 
+>
 >     enum HttpResponseOutcome {
 >         PROCESS, SKIP, FAIL
 >     }
@@ -386,7 +389,7 @@ Parses the HTTP response into a key-value SourceRecord. This process is decompos
 > ##### `http.response.record.parser`
 > ```java
 > public interface KvRecordHttpResponseParser extends Configurable {
-> 
+>
 >     List<KvRecord> parse(HttpResponse response);
 > }
 > ```
@@ -398,7 +401,7 @@ Parses the HTTP response into a key-value SourceRecord. This process is decompos
 > ##### `http.response.record.mapper`
 > ```java
 > public interface KvSourceRecordMapper extends Configurable {
-> 
+>
 >     SourceRecord map(KvRecord record);
 > }
 > ```
@@ -414,11 +417,11 @@ Parses the HTTP response into a key-value SourceRecord. This process is decompos
 Uses [Jackson](https://github.com/FasterXML/jackson) to look for the records in the response.
 
 > ##### `http.response.list.pointer`
-> [JsonPointer](https://tools.ietf.org/html/rfc6901) to the property in the response body containing an array of records 
+> [JsonPointer](https://tools.ietf.org/html/rfc6901) to the property in the response body containing an array of records
 > *   Example: `/items`
 > *   Type: `String`
 > *   Default: `/`
-> 
+>
 > ##### `http.response.record.pointer`
 > [JsonPointer](https://tools.ietf.org/html/rfc6901) to the individual record to be used as kafka record body. Useful
   when the object we are interested in is under a nested structure
@@ -428,13 +431,13 @@ Uses [Jackson](https://github.com/FasterXML/jackson) to look for the records in 
 > ##### `http.response.record.offset.pointer`
 > Comma separated list of `key=/value` pairs where the key is the name of the property in the offset, and the value is
 > the [JsonPointer](https://tools.ietf.org/html/rfc6901) to the value being used as offset for future requests.
-> This is the mechanism that enables sharing state in between `HttpRequests`. `HttpRequestFactory` implementations 
+> This is the mechanism that enables sharing state in between `HttpRequests`. `HttpRequestFactory` implementations
 > receive this `Offset`.
 >
 > Special properties:
 > - `key` is used as record's identifier, used for *de-duplication* and topic *partition routing*
 > - `timestamp` is used as record's timestamp, used for *de-duplication* and *ordering*
-> 
+>
 > One of the roles of the offset, even if not required for preparing the next request, is helping in deduplication of
 > already seen records, by providing a sense of progress, assuming consistent ordering. (e.g. even if the response returns
 > some repeated results in between requests because they have the same timestamp, anything prior to the last seen
@@ -444,26 +447,26 @@ Uses [Jackson](https://github.com/FasterXML/jackson) to look for the records in 
 > *   Default: `""`
 >
 > ##### `http.response.record.timestamp.parser`
-> Class responsible for converting the timestamp property captured above into a `java.time.Instant`.  
+> Class responsible for converting the timestamp property captured above into a `java.time.Instant`.
 > *   Type: `String`
 > *   Default: `com.github.castorm.kafka.connect.http.response.timestamp.EpochMillisOrDelegateTimestampParser`
 > *   Available implementations:
->     *   `com.github.castorm.kafka.connect.http.response.timestamp.EpochMillisTimestampParser` 
+>     *   `com.github.castorm.kafka.connect.http.response.timestamp.EpochMillisTimestampParser`
            Implementation that captures the timestamp as an epoch millis long
->     *   `com.github.castorm.kafka.connect.http.response.timestamp.EpochMillisOrDelegateTimestampParser` 
+>     *   `com.github.castorm.kafka.connect.http.response.timestamp.EpochMillisOrDelegateTimestampParser`
            Implementation that tries to capture as epoch millis or delegates to another parser in case of failure
->     *   `com.github.castorm.kafka.connect.http.response.timestamp.DateTimeFormatterTimestampParser` 
+>     *   `com.github.castorm.kafka.connect.http.response.timestamp.DateTimeFormatterTimestampParser`
            Implementation based on based on a `DateTimeFormatter`
 >     *   `com.github.castorm.kafka.connect.http.response.timestamp.NattyTimestampParser`
            Implementation based on [Natty](http://natty.joestelmach.com/) parser
 >     *   `com.github.castorm.kafka.connect.http.response.timestamp.RegexTimestampParser`
-          Implementation that extracts substring from timestamp column and parse it 
+          Implementation that extracts substring from timestamp column and parse it
 
 > ##### `http.response.record.timestamp.parser.pattern`
-> When using `DateTimeFormatterTimestampParser`, a custom pattern can be specified 
+> When using `DateTimeFormatterTimestampParser`, a custom pattern can be specified
 > *   Type: `String`
 > *   Default: `yyyy-MM-dd'T'HH:mm:ss[.SSS]X`
-> 
+>
 > ##### `http.response.record.timestamp.parser.zone`
 > Timezone of the timestamp. Accepts [ZoneId](https://docs.oracle.com/javase/8/docs/api/java/time/ZoneId.html) valid
   identifiers
@@ -471,12 +474,12 @@ Uses [Jackson](https://github.com/FasterXML/jackson) to look for the records in 
 > *   Default: `UTC`
 >
 > ##### `http.response.record.timestamp.parser.regex`
-> When using `RegexTimestampParser`, a custom regex pattern can be specified 
+> When using `RegexTimestampParser`, a custom regex pattern can be specified
 > *   Type: `String`
 > *   Default: `.*`
 >
 ##### `http.response.record.timestamp.parser.regex.delegate`
-> When using `RegexTimestampParser`, a delegate class to parse timestamp 
+> When using `RegexTimestampParser`, a delegate class to parse timestamp
 > *   Type: `Class`
 > *   Default: `DateTimeFormatterTimestampParser`
 
@@ -515,7 +518,7 @@ Here is also where we'll tell Kafka Connect to what topic and on what partition 
 
 ### SourceRecordSorter: Sorting SourceRecords
 Some Http resources not designed for CDC, return snapshots with most recent records first. In this cases de-duplication
-is especially important, as subsequent request are likely to produce similar results. The de-duplication mechanisms 
+is especially important, as subsequent request are likely to produce similar results. The de-duplication mechanisms
 offered by this connector are order-dependent, as they are usually based on timestamps.
 
 To enable de-duplication in cases like this, we can instruct the connector to assume a specific order direction, either
@@ -524,7 +527,7 @@ To enable de-duplication in cases like this, we can instruct the connector to as
 > #### `http.record.sorter`
 > ```java
 > public interface SourceRecordSorter extends Configurable {
-> 
+
 >     List<SourceRecord> sort(List<SourceRecord> records);
 > }
 > ```
@@ -547,7 +550,7 @@ There are cases when we'll be interested in filtering out certain records. One o
 > #### `http.record.filter.factory`
 > ```java
 > public interface SourceRecordFilterFactory extends Configurable {
-> 
+>
 >     Predicate<SourceRecord> create(Offset offset);
 > }
 > ```
@@ -560,7 +563,7 @@ There are cases when we'll be interested in filtering out certain records. One o
 
 #### Filtering out SourceRecord with OffsetTimestampRecordFilterFactory
 
-De-duplicates based on `Offset`'s timestamp, filtering out records with earlier or the same timestamp. 
+De-duplicates based on `Offset`'s timestamp, filtering out records with earlier or the same timestamp.
 Useful when timestamp is used to filter the HTTP resource, but the filter does not have full timestamp precision.
 Assumptions:
 *   Records are ordered by timestamp
@@ -570,13 +573,13 @@ If the latter assumption cannot be satisfied, check `OffsetRecordFilterFactory` 
 
 #### Filtering out SourceRecord with OffsetRecordFilterFactory
 
-De-duplicates based on `Offset`'s timestamp, key and any other custom property present in the `Offset`, filtering out 
+De-duplicates based on `Offset`'s timestamp, key and any other custom property present in the `Offset`, filtering out
 records with earlier timestamps, or when in the same timestamp, only those up to the last seen `Offset` properties.
 Useful when timestamp alone is not unique but together with some other `Offset` property is.
-Assumptions: 
+Assumptions:
 *   Records are ordered by timestamp
 *   There is an `Offset` property that uniquely identify records (e.g. key)
-*   There won't be new items preceding already seen ones 
+*   There won't be new items preceding already seen ones
 
 ---
 ## Development
@@ -650,7 +653,7 @@ Contributions are welcome via pull requests, pending definition of code of condu
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. 
+We use [SemVer](http://semver.org/) for versioning.
 
 ## License
 

@@ -20,16 +20,15 @@ package com.github.castorm.kafka.connect.http.auth;
  * #L%
  */
 
+import static org.apache.kafka.common.config.ConfigDef.Importance.MEDIUM;
+import static org.apache.kafka.common.config.ConfigDef.Type.STRING;
+
 import com.github.castorm.kafka.connect.http.auth.spi.HttpAuthenticationType;
 import com.github.castorm.kafka.connect.http.auth.spi.HttpAuthenticator;
+import java.util.Map;
 import lombok.Getter;
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.ConfigDef;
-
-import java.util.Map;
-
-import static org.apache.kafka.common.config.ConfigDef.Importance.MEDIUM;
-import static org.apache.kafka.common.config.ConfigDef.Type.STRING;
 
 @Getter
 public class ConfigurableHttpAuthenticatorConfig extends AbstractConfig {

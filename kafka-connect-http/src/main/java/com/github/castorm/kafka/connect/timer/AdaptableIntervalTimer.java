@@ -20,15 +20,14 @@ package com.github.castorm.kafka.connect.timer;
  * #L%
  */
 
-import com.github.castorm.kafka.connect.timer.spi.Timer;
-
-import java.time.Instant;
-import java.util.Map;
-import java.util.function.Function;
-
 import static java.time.Instant.EPOCH;
 import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.MILLIS;
+
+import com.github.castorm.kafka.connect.timer.spi.Timer;
+import java.time.Instant;
+import java.util.Map;
+import java.util.function.Function;
 
 public class AdaptableIntervalTimer implements Timer {
 

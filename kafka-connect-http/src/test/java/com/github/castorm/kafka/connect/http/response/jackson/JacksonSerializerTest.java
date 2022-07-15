@@ -20,18 +20,6 @@ package com.github.castorm.kafka.connect.http.response.jackson;
  * #L%
  */
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.io.IOException;
-
 import static com.fasterxml.jackson.core.JsonPointer.compile;
 import static com.github.castorm.kafka.connect.http.response.jackson.JacksonSerializerTest.Fixture.array;
 import static com.github.castorm.kafka.connect.http.response.jackson.JacksonSerializerTest.Fixture.deserialize;
@@ -42,6 +30,17 @@ import static com.github.castorm.kafka.connect.http.response.jackson.JacksonSeri
 import static com.github.castorm.kafka.connect.http.response.jackson.JacksonSerializerTest.Fixture.itemArrayNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import lombok.SneakyThrows;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class JacksonSerializerTest {
@@ -75,17 +74,20 @@ class JacksonSerializerTest {
 
     @Test
     void whenGetArrayAtPointerArray_thenAllItems() {
-        assertThat(serializer.getArrayAt(deserialize(array), compile("/"))).containsExactly(deserialize(item1), deserialize(item2));
+        assertThat(serializer.getArrayAt(deserialize(array), compile("/")))
+                .containsExactly(deserialize(item1), deserialize(item2));
     }
 
     @Test
     void whenGetArrayAtPointerItems_thenAllItems() {
-        assertThat(serializer.getArrayAt(deserialize(itemArray), compile("/items"))).containsExactly(deserialize(item1), deserialize(item2));
+        assertThat(serializer.getArrayAt(deserialize(itemArray), compile("/items")))
+                .containsExactly(deserialize(item1), deserialize(item2));
     }
 
     @Test
     void whenGetNullAtPointerItems_thenNoItem() {
-        assertThat(serializer.getArrayAt(deserialize(itemArrayNull), compile("/items"))).isEmpty();
+        assertThat(serializer.getArrayAt(deserialize(itemArrayNull), compile("/items")))
+                .isEmpty();
     }
 
     @Test
@@ -95,7 +97,8 @@ class JacksonSerializerTest {
 
     @Test
     void whenGetObjectAtProperty_thenProperty() {
-        assertThat(serializer.getObjectAt(deserialize(item1), compile("/k1"))).isEqualTo(deserialize(item1).at("/k1"));
+        assertThat(serializer.getObjectAt(deserialize(item1), compile("/k1")))
+                .isEqualTo(deserialize(item1).at("/k1"));
     }
 
     interface Fixture {

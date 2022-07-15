@@ -20,15 +20,14 @@ package com.github.castorm.kafka.connect.common;
  * #L%
  */
 
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
+import static java.nio.file.Files.newInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.Properties;
-
-import static java.nio.file.Files.newInputStream;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @UtilityClass

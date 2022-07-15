@@ -22,11 +22,10 @@ package com.github.castorm.kafka.connect.http.record;
 
 import com.github.castorm.kafka.connect.http.model.Offset;
 import com.github.castorm.kafka.connect.http.record.spi.SourceRecordFilterFactory;
-import lombok.RequiredArgsConstructor;
-import org.apache.kafka.connect.source.SourceRecord;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
+import lombok.RequiredArgsConstructor;
+import org.apache.kafka.connect.source.SourceRecord;
 
 @RequiredArgsConstructor
 public class OffsetRecordFilterFactory implements SourceRecordFilterFactory {

@@ -9,9 +9,9 @@ package com.github.castorm.kafka.connect.http.record;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,18 +20,6 @@ package com.github.castorm.kafka.connect.http.record;
  * #L%
  */
 
-import com.github.castorm.kafka.connect.http.model.Offset;
-import com.github.castorm.kafka.connect.http.record.model.KvRecord;
-import com.google.common.collect.ImmutableMap;
-import org.apache.kafka.connect.data.Struct;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Instant;
-
 import static com.github.castorm.kafka.connect.http.record.SchemedKvSourceRecordMapperTest.Fixture.now;
 import static com.github.castorm.kafka.connect.http.record.SchemedKvSourceRecordMapperTest.Fixture.offset;
 import static com.github.castorm.kafka.connect.http.record.SchemedKvSourceRecordMapperTest.Fixture.record;
@@ -39,6 +27,17 @@ import static java.time.Instant.now;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+
+import com.github.castorm.kafka.connect.http.model.Offset;
+import com.github.castorm.kafka.connect.http.record.model.KvRecord;
+import com.google.common.collect.ImmutableMap;
+import java.time.Instant;
+import org.apache.kafka.connect.data.Struct;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class SchemedKvSourceRecordMapperTest {
@@ -62,22 +61,26 @@ class SchemedKvSourceRecordMapperTest {
 
     @Test
     void givenKey_whenMap_thenKeyMapped() {
-        assertThat(((Struct) mapper.map(record.withKey("key")).key()).get("key")).isEqualTo("key");
+        assertThat(((Struct) mapper.map(record.withKey("key")).key()).get("key"))
+                .isEqualTo("key");
     }
 
     @Test
     void givenValue_whenMap_thenValueMapped() {
-        assertThat(((Struct) mapper.map(record.withValue("value")).value()).get("value")).isEqualTo("value");
+        assertThat(((Struct) mapper.map(record.withValue("value")).value()).get("value"))
+                .isEqualTo("value");
     }
 
     @Test
     void givenKey_whenMap_thenValueKeyMapped() {
-        assertThat(((Struct) mapper.map(record.withKey("key")).value()).get("key")).isEqualTo("key");
+        assertThat(((Struct) mapper.map(record.withKey("key")).value()).get("key"))
+                .isEqualTo("key");
     }
 
     @Test
     void givenOffsetTimestamp_whenMap_thenValueTimestampMapped() {
-        assertThat(((Struct) mapper.map(record.withOffset(offset)).value()).get("timestamp")).isEqualTo(now.toEpochMilli());
+        assertThat(((Struct) mapper.map(record.withOffset(offset)).value()).get("timestamp"))
+                .isEqualTo(now.toEpochMilli());
     }
 
     @Test

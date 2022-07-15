@@ -20,15 +20,14 @@ package com.github.castorm.kafka.connect.http.client.okhttp;
  * #L%
  */
 
+import static java.util.Collections.emptyMap;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.github.castorm.kafka.connect.http.auth.BasicHttpAuthenticator;
 import com.github.castorm.kafka.connect.http.auth.ConfigurableHttpAuthenticator;
 import com.google.common.collect.ImmutableMap;
-import org.junit.jupiter.api.Test;
-
 import java.util.Map;
-
-import static java.util.Collections.emptyMap;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
 
 class OkHttpClientConfigTest {
 
@@ -39,7 +38,9 @@ class OkHttpClientConfigTest {
 
     @Test
     void whenConnectionTimeoutMillis_thenInitialized() {
-        assertThat(config(ImmutableMap.of("http.client.connection.timeout.millis", "42")).getConnectionTimeoutMillis()).isEqualTo(42L);
+        assertThat(config(ImmutableMap.of("http.client.connection.timeout.millis", "42"))
+                        .getConnectionTimeoutMillis())
+                .isEqualTo(42L);
     }
 
     @Test
@@ -49,7 +50,9 @@ class OkHttpClientConfigTest {
 
     @Test
     void whenReadTimeoutMillis_thenInitialized() {
-        assertThat(config(ImmutableMap.of("http.client.read.timeout.millis", "42")).getReadTimeoutMillis()).isEqualTo(42L);
+        assertThat(config(ImmutableMap.of("http.client.read.timeout.millis", "42"))
+                        .getReadTimeoutMillis())
+                .isEqualTo(42L);
     }
 
     @Test
@@ -59,7 +62,8 @@ class OkHttpClientConfigTest {
 
     @Test
     void whenKeepAliveDuration_thenInitialized() {
-        assertThat(config(ImmutableMap.of("http.client.ttl.millis", "42")).getKeepAliveDuration()).isEqualTo(42L);
+        assertThat(config(ImmutableMap.of("http.client.ttl.millis", "42")).getKeepAliveDuration())
+                .isEqualTo(42L);
     }
 
     @Test
@@ -69,7 +73,8 @@ class OkHttpClientConfigTest {
 
     @Test
     void whenMaxIdleConnections_thenInitialized() {
-        assertThat(config(ImmutableMap.of("http.client.max-idle", "42")).getMaxIdleConnections()).isEqualTo(42L);
+        assertThat(config(ImmutableMap.of("http.client.max-idle", "42")).getMaxIdleConnections())
+                .isEqualTo(42L);
     }
 
     @Test
@@ -79,7 +84,10 @@ class OkHttpClientConfigTest {
 
     @Test
     void whenAuthenticator_thenInitialized() {
-        assertThat(config(ImmutableMap.of("http.auth", "com.github.castorm.kafka.connect.http.auth.BasicHttpAuthenticator")).getAuthenticator()).isInstanceOf(BasicHttpAuthenticator.class);
+        assertThat(config(ImmutableMap.of(
+                                "http.auth", "com.github.castorm.kafka.connect.http.auth.BasicHttpAuthenticator"))
+                        .getAuthenticator())
+                .isInstanceOf(BasicHttpAuthenticator.class);
     }
 
     private static OkHttpClientConfig config(Map<String, String> config) {

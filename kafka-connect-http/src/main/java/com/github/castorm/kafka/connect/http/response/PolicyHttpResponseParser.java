@@ -20,18 +20,16 @@ package com.github.castorm.kafka.connect.http.response;
  * #L%
  */
 
-import com.github.castorm.kafka.connect.http.model.HttpResponse;
-import com.github.castorm.kafka.connect.http.response.spi.HttpResponseParser;
-import com.github.castorm.kafka.connect.http.response.spi.HttpResponsePolicy;
-import lombok.RequiredArgsConstructor;
-import org.apache.kafka.connect.source.SourceRecord;
-
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
+
+import com.github.castorm.kafka.connect.http.model.HttpResponse;
+import com.github.castorm.kafka.connect.http.model.ParsedResponse;
+import com.github.castorm.kafka.connect.http.response.spi.HttpResponseParser;
+import com.github.castorm.kafka.connect.http.response.spi.HttpResponsePolicy;
+import java.util.Map;
+import java.util.function.Function;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class PolicyHttpResponseParser implements HttpResponseParser {
@@ -54,15 +52,18 @@ public class PolicyHttpResponseParser implements HttpResponseParser {
     }
 
     @Override
-    public List<SourceRecord> parse(HttpResponse response) {
+    public ParsedResponse parse(HttpResponse response) {
         switch (policy.resolve(response)) {
             case PROCESS:
                 return delegate.parse(response);
             case SKIP:
-                return emptyList();
+                return ParsedResponse.of(emptyList());
             case FAIL:
             default:
-                throw new IllegalStateException(String.format("Policy failed for response code: %s, body: %s", response.getCode(), ofNullable(response.getBody()).map(String::new).orElse("")));
+                throw new IllegalStateException(String.format(
+                        "Policy failed for response code: %s, body: %s",
+                        response.getCode(),
+                        ofNullable(response.getBody()).map(String::new).orElse("")));
         }
     }
 }

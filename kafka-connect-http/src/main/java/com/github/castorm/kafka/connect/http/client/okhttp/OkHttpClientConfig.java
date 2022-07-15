@@ -20,19 +20,18 @@ package com.github.castorm.kafka.connect.http.client.okhttp;
  * #L%
  */
 
-import com.github.castorm.kafka.connect.http.auth.ConfigurableHttpAuthenticator;
-import com.github.castorm.kafka.connect.http.auth.spi.HttpAuthenticator;
-import lombok.Getter;
-import org.apache.kafka.common.config.AbstractConfig;
-import org.apache.kafka.common.config.ConfigDef;
-
-import java.util.Map;
-
 import static org.apache.kafka.common.config.ConfigDef.Importance.HIGH;
 import static org.apache.kafka.common.config.ConfigDef.Importance.MEDIUM;
 import static org.apache.kafka.common.config.ConfigDef.Type.CLASS;
 import static org.apache.kafka.common.config.ConfigDef.Type.INT;
 import static org.apache.kafka.common.config.ConfigDef.Type.LONG;
+
+import com.github.castorm.kafka.connect.http.auth.ConfigurableHttpAuthenticator;
+import com.github.castorm.kafka.connect.http.auth.spi.HttpAuthenticator;
+import java.util.Map;
+import lombok.Getter;
+import org.apache.kafka.common.config.AbstractConfig;
+import org.apache.kafka.common.config.ConfigDef;
 
 @Getter
 public class OkHttpClientConfig extends AbstractConfig {

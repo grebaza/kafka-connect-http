@@ -20,31 +20,30 @@ package com.github.castorm.kafka.connect.http.response.jackson;
  * #L%
  */
 
+import static java.util.Optional.ofNullable;
+import static java.util.UUID.nameUUIDFromBytes;
+import static java.util.stream.Collectors.toList;
+
+import com.fasterxml.jackson.databind.JsonNode;
 import com.github.castorm.kafka.connect.http.model.HttpResponse;
 import com.github.castorm.kafka.connect.http.model.Offset;
 import com.github.castorm.kafka.connect.http.record.model.KvRecord;
-import com.github.castorm.kafka.connect.http.response.jackson.model.JacksonRecord;
 import com.github.castorm.kafka.connect.http.response.spi.KvRecordHttpResponseParser;
 import com.github.castorm.kafka.connect.http.response.timestamp.spi.TimestampParser;
-import lombok.RequiredArgsConstructor;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-
-import static java.util.Optional.ofNullable;
-import static java.util.UUID.nameUUIDFromBytes;
-import static java.util.stream.Collectors.toList;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class JacksonKvRecordHttpResponseParser implements KvRecordHttpResponseParser {
 
     private final Function<Map<String, ?>, JacksonKvRecordHttpResponseParserConfig> configFactory;
 
-    private JacksonResponseRecordParser responseParser;
-
+    private JacksonRecordParser recordParser;
+    private JacksonSerializer serializer;
     private TimestampParser timestampParser;
 
     public JacksonKvRecordHttpResponseParser() {
@@ -54,38 +53,33 @@ public class JacksonKvRecordHttpResponseParser implements KvRecordHttpResponsePa
     @Override
     public void configure(Map<String, ?> configs) {
         JacksonKvRecordHttpResponseParserConfig config = configFactory.apply(configs);
-        responseParser = config.getResponseParser();
+        recordParser = config.getRecordParser();
+        serializer = config.getSerializer();
         timestampParser = config.getTimestampParser();
     }
 
     @Override
     public List<KvRecord> parse(HttpResponse response) {
-        return responseParser.getRecords(response.getBody())
-                .map(this::map)
-                .collect(toList());
+        JsonNode jsonBody = serializer.deserialize(response.getBody());
+
+        return recordParser.getRecords(jsonBody).map(this::toKvRecord).collect(toList());
     }
 
-    private KvRecord map(JacksonRecord record) {
+    private KvRecord toKvRecord(JsonNode jsonRecord) {
+        Map<String, Object> offsets = recordParser.getOffset(jsonRecord);
 
-        Map<String, Object> offsets = record.getOffset();
+        String key = ofNullable(offsets.get("key"))
+                .map(String.class::cast)
+                .orElseGet(() -> generateConsistentKey(recordParser.getValue(jsonRecord)));
 
-        String key = ofNullable(record.getKey())
-                .map(Optional::of)
-                .orElseGet(() -> ofNullable(offsets.get("key")).map(String.class::cast))
-                .orElseGet(() -> generateConsistentKey(record.getBody()));
+        Optional<Instant> timestamp =
+                ofNullable(offsets.get("timestamp")).map(String.class::cast).map(timestampParser::parse);
 
-        Optional<Instant> timestamp = ofNullable(record.getTimestamp())
-                .map(Optional::of)
-                .orElseGet(() -> ofNullable(offsets.get("timestamp")).map(String.class::cast))
-                .map(timestampParser::parse);
-
-        Offset offset = timestamp
-                .map(ts -> Offset.of(offsets, key, ts))
-                .orElseGet(() -> Offset.of(offsets, key));
+        Offset offset = timestamp.map(ts -> Offset.of(offsets, key, ts)).orElseGet(() -> Offset.of(offsets, key));
 
         return KvRecord.builder()
                 .key(key)
-                .value(record.getBody())
+                .value(recordParser.getValue(jsonRecord))
                 .offset(offset)
                 .build();
     }

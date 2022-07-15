@@ -20,15 +20,14 @@ package com.github.castorm.kafka.connect.http.model;
  * #L%
  */
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import static java.util.Optional.ofNullable;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
-import static java.util.Optional.ofNullable;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @ToString
 @EqualsAndHashCode

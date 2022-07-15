@@ -20,22 +20,21 @@ package com.github.castorm.kafka.connect;
  * #L%
  */
 
+import static java.lang.Integer.parseInt;
+import static java.util.Collections.emptyMap;
+
 import com.github.castorm.kafka.connect.http.HttpSourceConnector;
 import com.github.castorm.kafka.connect.http.HttpSourceTask;
-import lombok.SneakyThrows;
-import lombok.experimental.UtilityClass;
-import org.apache.kafka.connect.source.SourceRecord;
-import org.apache.kafka.connect.source.SourceTaskContext;
-import org.apache.kafka.connect.storage.OffsetStorageReader;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static java.lang.Integer.parseInt;
-import static java.util.Collections.emptyMap;
+import lombok.SneakyThrows;
+import lombok.experimental.UtilityClass;
+import org.apache.kafka.connect.source.SourceRecord;
+import org.apache.kafka.connect.source.SourceTaskContext;
+import org.apache.kafka.connect.storage.OffsetStorageReader;
 
 @UtilityClass
 public class KafkaConnectFake {
@@ -43,10 +42,10 @@ public class KafkaConnectFake {
     public static List<SourceRecord> readAllRecords(Map<String, String> config) {
         HttpSourceConnector connector = new HttpSourceConnector();
         connector.start(config);
-        List<SourceRecord> records = connector.taskConfigs(parseInt(config.getOrDefault("max.tasks", "1")))
-                .parallelStream()
-                .flatMap(conf -> runTaskUntilExhaust(conf).stream())
-                .collect(Collectors.toList());
+        List<SourceRecord> records =
+                connector.taskConfigs(parseInt(config.getOrDefault("max.tasks", "1"))).parallelStream()
+                        .flatMap(conf -> runTaskUntilExhaust(conf).stream())
+                        .collect(Collectors.toList());
         connector.stop();
         return records;
     }

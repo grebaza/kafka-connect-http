@@ -9,9 +9,9 @@ package com.github.castorm.kafka.connect.http.record;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,22 +20,21 @@ package com.github.castorm.kafka.connect.http.record;
  * #L%
  */
 
+import static java.util.Collections.emptyMap;
+import static org.apache.kafka.connect.data.SchemaBuilder.int64;
+import static org.apache.kafka.connect.data.SchemaBuilder.string;
+
 import com.github.castorm.kafka.connect.http.model.Offset;
 import com.github.castorm.kafka.connect.http.record.model.KvRecord;
 import com.github.castorm.kafka.connect.http.record.spi.KvSourceRecordMapper;
+import java.time.Instant;
+import java.util.Map;
+import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.source.SourceRecord;
-
-import java.time.Instant;
-import java.util.Map;
-import java.util.function.Function;
-
-import static java.util.Collections.emptyMap;
-import static org.apache.kafka.connect.data.SchemaBuilder.int64;
-import static org.apache.kafka.connect.data.SchemaBuilder.string;
 
 @RequiredArgsConstructor
 public class SchemedKvSourceRecordMapper implements KvSourceRecordMapper {
@@ -62,14 +61,22 @@ public class SchemedKvSourceRecordMapper implements KvSourceRecordMapper {
     public void configure(Map<String, ?> settings) {
         config = configFactory.apply(settings);
         keySchema = SchemaBuilder.struct()
-                .name("com.github.castorm.kafka.connect.http.Key").doc("Message Key")
-                .field(KEY_FIELD_NAME, string().optional().doc("HTTP Record Key").build())
+                .name("com.github.castorm.kafka.connect.http.Key")
+                .doc("Message Key")
+                .field(
+                        KEY_FIELD_NAME,
+                        string().optional().doc("HTTP Record Key").build())
                 .build();
         valueSchema = SchemaBuilder.struct()
-                .name("com.github.castorm.kafka.connect.http.Value").doc("Message Value")
+                .name("com.github.castorm.kafka.connect.http.Value")
+                .doc("Message Value")
                 .field(VALUE_FIELD_NAME, string().doc("HTTP Record Value").build())
-                .field(KEY_FIELD_NAME, string().optional().doc("HTTP Record Key").build())
-                .field(TIMESTAMP_FIELD_NAME, int64().optional().doc("HTTP Record Timestamp").build())
+                .field(
+                        KEY_FIELD_NAME,
+                        string().optional().doc("HTTP Record Key").build())
+                .field(
+                        TIMESTAMP_FIELD_NAME,
+                        int64().optional().doc("HTTP Record Timestamp").build())
                 .build();
     }
 

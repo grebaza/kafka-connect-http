@@ -20,28 +20,25 @@ package com.github.castorm.kafka.connect.http.record;
  * #L%
  */
 
+import static java.util.Collections.emptyMap;
+import static org.apache.kafka.connect.data.SchemaBuilder.string;
+
 import com.github.castorm.kafka.connect.http.model.Offset;
 import com.github.castorm.kafka.connect.http.record.model.KvRecord;
 import com.github.castorm.kafka.connect.http.record.spi.KvSourceRecordMapper;
+import java.time.Instant;
+import java.util.Map;
+import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.source.SourceRecord;
 
-import java.time.Instant;
-import java.util.Map;
-import java.util.function.Function;
-
-import static java.util.Collections.emptyMap;
-import static org.apache.kafka.connect.data.SchemaBuilder.string;
-
 /**
  * @deprecated The same can be achieved with Kafka Connect's SMT ExtractKey/ExtractValue. e.g.
- * <p>
- * "transforms": "ExtractKey,ExtractValue",
- * "transforms.ExtractKey.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
- * "transforms.ExtractKey.field": "key",
- * "transforms.ExtractValue.type": "org.apache.kafka.connect.transforms.ExtractField$Value",
- * "transforms.ExtractValue.field": "value"
+ *     <p>"transforms": "ExtractKey,ExtractValue", "transforms.ExtractKey.type":
+ *     "org.apache.kafka.connect.transforms.ExtractField$Key", "transforms.ExtractKey.field": "key",
+ *     "transforms.ExtractValue.type": "org.apache.kafka.connect.transforms.ExtractField$Value",
+ *     "transforms.ExtractValue.field": "value"
  */
 @Deprecated
 @RequiredArgsConstructor

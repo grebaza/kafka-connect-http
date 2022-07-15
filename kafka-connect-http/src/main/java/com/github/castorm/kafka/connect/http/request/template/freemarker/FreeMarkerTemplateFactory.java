@@ -20,31 +20,34 @@ package com.github.castorm.kafka.connect.http.request.template.freemarker;
  * #L%
  */
 
+import static java.util.UUID.randomUUID;
+
 import com.github.castorm.kafka.connect.http.request.template.spi.Template;
 import com.github.castorm.kafka.connect.http.request.template.spi.TemplateFactory;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 import freemarker.template.Version;
-import lombok.SneakyThrows;
-import lombok.Value;
-
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Map;
-
-import static java.util.UUID.randomUUID;
+import lombok.SneakyThrows;
+import lombok.Value;
 
 public class FreeMarkerTemplateFactory implements TemplateFactory {
 
-    private final Configuration configuration = new Configuration(new Version(2, 3, 30)) {{
-        setNumberFormat("computer");
-    }};
+    private final Configuration configuration = new Configuration(new Version(2, 3, 30)) {
+        {
+            setNumberFormat("computer");
+        }
+    };
 
     @Override
     public Template create(String template) {
-        return offset -> apply(createTemplate(template), new TemplateModel(offset.toMap()));
+        return request -> apply(
+                createTemplate(template),
+                new TemplateModel(request.getOffset(), request.getPaging(), request.getMetadata()));
     }
 
     @SneakyThrows(IOException.class)
@@ -63,5 +66,7 @@ public class FreeMarkerTemplateFactory implements TemplateFactory {
     public static class TemplateModel {
 
         Map<String, ?> offset;
+        Map<String, ?> paging;
+        Map<String, ?> metadata;
     }
 }

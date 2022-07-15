@@ -20,10 +20,9 @@ package com.github.castorm.kafka.connect.timer.spi;
  * #L%
  */
 
-import org.apache.kafka.common.Configurable;
-
 import java.time.Instant;
 import java.util.Map;
+import org.apache.kafka.common.Configurable;
 
 @FunctionalInterface
 public interface Timer extends Configurable {

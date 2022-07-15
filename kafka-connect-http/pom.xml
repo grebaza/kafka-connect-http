@@ -3,7 +3,7 @@
     <parent>
         <artifactId>kafka-connect-http-parent</artifactId>
         <groupId>com.github.castorm</groupId>
-        <version>0.8.11</version>
+        <version>0.9.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -220,9 +220,6 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
                         <version>3.2.0</version>
-                        <configuration>
-                            <source>${java.version}</source>
-                        </configuration>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
@@ -309,5 +306,4 @@
             </plugin>
         </plugins>
     </reporting>
-
 </project>

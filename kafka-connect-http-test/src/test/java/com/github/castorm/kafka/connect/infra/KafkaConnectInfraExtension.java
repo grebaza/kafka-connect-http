@@ -20,15 +20,14 @@ package com.github.castorm.kafka.connect.infra;
  * #L%
  */
 
+import static org.testcontainers.containers.BindMode.READ_ONLY;
+import static org.testcontainers.utility.DockerImageName.parse;
+
 import com.github.castorm.kafka.connect.WiremockContainer;
+import java.lang.reflect.Method;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
-
-import java.lang.reflect.Method;
-
-import static org.testcontainers.containers.BindMode.READ_ONLY;
-import static org.testcontainers.utility.DockerImageName.parse;
 
 public class KafkaConnectInfraExtension implements InvocationInterceptor {
 
@@ -48,7 +47,10 @@ public class KafkaConnectInfraExtension implements InvocationInterceptor {
     }
 
     @Override
-    public void interceptAfterAllMethod(Invocation<Void> invocation, ReflectiveInvocationContext<Method> invocationContext, ExtensionContext extensionContext) {
+    public void interceptAfterAllMethod(
+            Invocation<Void> invocation,
+            ReflectiveInvocationContext<Method> invocationContext,
+            ExtensionContext extensionContext) {
         infra.stop();
         wiremock.stop();
     }

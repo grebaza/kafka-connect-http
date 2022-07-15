@@ -9,9 +9,9 @@ package com.github.castorm.kafka.connect.http.response;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,25 +20,24 @@ package com.github.castorm.kafka.connect.http.response;
  * #L%
  */
 
+import static java.util.stream.Collectors.toList;
+
 import com.github.castorm.kafka.connect.http.model.HttpResponse;
+import com.github.castorm.kafka.connect.http.model.KvParsedResponse;
+import com.github.castorm.kafka.connect.http.model.ParsedResponse;
 import com.github.castorm.kafka.connect.http.record.spi.KvSourceRecordMapper;
 import com.github.castorm.kafka.connect.http.response.spi.HttpResponseParser;
-import com.github.castorm.kafka.connect.http.response.spi.KvRecordHttpResponseParser;
-import lombok.RequiredArgsConstructor;
-import org.apache.kafka.connect.source.SourceRecord;
-
-import java.util.List;
+import com.github.castorm.kafka.connect.http.response.spi.KvParsedResponseHttpResponseParser;
 import java.util.Map;
 import java.util.function.Function;
-
-import static java.util.stream.Collectors.toList;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class KvHttpResponseParser implements HttpResponseParser {
 
     private final Function<Map<String, ?>, KvHttpResponseParserConfig> configFactory;
 
-    private KvRecordHttpResponseParser recordParser;
+    private KvParsedResponseHttpResponseParser responseParser;
 
     private KvSourceRecordMapper recordMapper;
 
@@ -49,14 +48,19 @@ public class KvHttpResponseParser implements HttpResponseParser {
     @Override
     public void configure(Map<String, ?> configs) {
         KvHttpResponseParserConfig config = configFactory.apply(configs);
-        recordParser = config.getRecordParser();
+        responseParser = config.getResponseParser();
         recordMapper = config.getRecordMapper();
     }
 
     @Override
-    public List<SourceRecord> parse(HttpResponse response) {
-        return recordParser.parse(response).stream()
-                .map(recordMapper::map)
-                .collect(toList());
+    public ParsedResponse parse(HttpResponse response) {
+        return map(responseParser.parse(response));
+    }
+
+    private ParsedResponse map(KvParsedResponse parsed) {
+        return ParsedResponse.of(
+                parsed.getRecords().stream().map(recordMapper::map).collect(toList()),
+                parsed.getPaging(),
+                parsed.getMetadata());
     }
 }

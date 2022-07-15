@@ -20,22 +20,21 @@ package com.github.castorm.kafka.connect.http;
  * #L%
  */
 
+import static com.github.castorm.kafka.connect.ConnectorUtils.getConfigMap;
+import static com.github.castorm.kafka.connect.ConnectorUtils.readFileFromClasspath;
+import static com.github.castorm.kafka.connect.ConnectorUtils.replaceVariables;
+import static com.github.castorm.kafka.connect.KafkaConnectFake.readAllRecords;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.github.tomakehurst.wiremock.WireMockServer;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
-
-import java.util.List;
-import java.util.Map;
-
-import static com.github.castorm.kafka.connect.ConnectorUtils.getConfigMap;
-import static com.github.castorm.kafka.connect.ConnectorUtils.readFileFromClasspath;
-import static com.github.castorm.kafka.connect.ConnectorUtils.replaceVariables;
-import static com.github.castorm.kafka.connect.KafkaConnectFake.readAllRecords;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 class HttpSourceConnectorIT {
@@ -59,13 +58,18 @@ class HttpSourceConnectorIT {
     @Test
     void validateConnector1() {
 
-        Map<String, String> config = getConfigMap(replaceVariables(readFileFromClasspath("connectors/connector1.json"), properties));
+        Map<String, String> config =
+                getConfigMap(replaceVariables(readFileFromClasspath("connectors/connector1.json"), properties));
 
         List<SourceRecord> records = readAllRecords(config);
 
         assertThat(records).hasSize(2);
         assertThat(records).extracting(SourceRecord::topic).allMatch(config.get("kafka.topic")::equals);
-        assertThat(records).extracting(record -> (String) record.sourceOffset().get("key")).containsExactly("TICKT-0002", "TICKT-0003");
-        assertThat(records).extracting(record -> (String) record.sourceOffset().get("timestamp")).containsExactly("2020-01-01T00:00:02Z", "2020-01-01T00:00:03Z");
+        assertThat(records)
+                .extracting(record -> (String) record.sourceOffset().get("key"))
+                .containsExactly("TICKT-0002", "TICKT-0003");
+        assertThat(records)
+                .extracting(record -> (String) record.sourceOffset().get("timestamp"))
+                .containsExactly("2020-01-01T00:00:02Z", "2020-01-01T00:00:03Z");
     }
 }

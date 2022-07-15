@@ -20,31 +20,30 @@ package com.github.castorm.kafka.connect;
  * #L%
  */
 
+import static java.nio.file.Files.readAllBytes;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import lombok.SneakyThrows;
-import lombok.experimental.UtilityClass;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
-
-import static java.nio.file.Files.readAllBytes;
+import lombok.SneakyThrows;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ConnectorUtils {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private static final ObjectReader MAP_READER = OBJECT_MAPPER.readerFor(new TypeReference<Map<String, String>>() {
-    });
+    private static final ObjectReader MAP_READER = OBJECT_MAPPER.readerFor(new TypeReference<Map<String, String>>() {});
 
     @SneakyThrows(URISyntaxException.class)
     public static String readFileFromClasspath(String fileName) {
-        return readFile(Paths.get(ConnectorUtils.class.getClassLoader().getResource(fileName).toURI()));
+        return readFile(Paths.get(
+                ConnectorUtils.class.getClassLoader().getResource(fileName).toURI()));
     }
 
     public static String readFile(String fileName) {

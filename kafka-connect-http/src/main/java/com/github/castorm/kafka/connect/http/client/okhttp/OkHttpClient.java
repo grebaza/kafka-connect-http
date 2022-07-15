@@ -20,10 +20,23 @@ package com.github.castorm.kafka.connect.http.client.okhttp;
  * #L%
  */
 
+import static java.util.Optional.empty;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
+import static okhttp3.HttpUrl.parse;
+import static okhttp3.RequestBody.create;
+import static okhttp3.logging.HttpLoggingInterceptor.Level.BASIC;
+import static okhttp3.logging.HttpLoggingInterceptor.Level.BODY;
+import static okhttp3.logging.HttpLoggingInterceptor.Level.NONE;
+
 import com.github.castorm.kafka.connect.http.auth.spi.HttpAuthenticator;
 import com.github.castorm.kafka.connect.http.client.spi.HttpClient;
 import com.github.castorm.kafka.connect.http.model.HttpRequest;
 import com.github.castorm.kafka.connect.http.model.HttpResponse;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Call;
@@ -33,20 +46,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static java.util.Optional.empty;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
-import static okhttp3.HttpUrl.parse;
-import static okhttp3.RequestBody.create;
-import static okhttp3.logging.HttpLoggingInterceptor.Level.BASIC;
-import static okhttp3.logging.HttpLoggingInterceptor.Level.BODY;
-import static okhttp3.logging.HttpLoggingInterceptor.Level.NONE;
 
 @Slf4j
 public class OkHttpClient implements HttpClient {
@@ -62,7 +61,8 @@ public class OkHttpClient implements HttpClient {
 
         authenticator = config.getAuthenticator();
         client = new okhttp3.OkHttpClient.Builder()
-                .connectionPool(new ConnectionPool(config.getMaxIdleConnections(), config.getKeepAliveDuration(), MILLISECONDS))
+                .connectionPool(
+                        new ConnectionPool(config.getMaxIdleConnections(), config.getKeepAliveDuration(), MILLISECONDS))
                 .connectTimeout(config.getConnectionTimeoutMillis(), MILLISECONDS)
                 .readTimeout(config.getReadTimeoutMillis(), MILLISECONDS)
                 .retryOnConnectionFailure(true)
@@ -73,8 +73,10 @@ public class OkHttpClient implements HttpClient {
     }
 
     private Request authorize(Request request) {
-        return authenticator.getAuthorizationHeader()
-                .map(header -> request.newBuilder().header(AUTHORIZATION, header).build())
+        return authenticator
+                .getAuthorizationHeader()
+                .map(header ->
+                        request.newBuilder().header(AUTHORIZATION, header).build())
                 .orElse(request);
     }
 

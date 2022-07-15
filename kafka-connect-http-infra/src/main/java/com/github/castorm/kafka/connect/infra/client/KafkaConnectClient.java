@@ -20,6 +20,10 @@ package com.github.castorm.kafka.connect.infra.client;
  * #L%
  */
 
+import static com.github.castorm.kafka.connect.ConnectorUtils.getConfigMap;
+import static okhttp3.logging.HttpLoggingInterceptor.Level.BODY;
+
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -28,11 +32,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.logging.HttpLoggingInterceptor;
-
-import java.util.Map;
-
-import static com.github.castorm.kafka.connect.ConnectorUtils.getConfigMap;
-import static okhttp3.logging.HttpLoggingInterceptor.Level.BODY;
 
 @Slf4j
 @RequiredArgsConstructor

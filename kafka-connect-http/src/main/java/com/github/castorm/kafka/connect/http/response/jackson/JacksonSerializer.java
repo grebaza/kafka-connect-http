@@ -20,17 +20,18 @@ package com.github.castorm.kafka.connect.http.response.jackson;
  * #L%
  */
 
+import static com.fasterxml.jackson.core.JsonPointer.compile;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.StreamSupport.stream;
+
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.Optional;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-
-import java.io.IOException;
-import java.util.stream.Stream;
-
-import static com.fasterxml.jackson.core.JsonPointer.compile;
-import static java.util.stream.StreamSupport.stream;
 
 @RequiredArgsConstructor
 class JacksonSerializer {
@@ -69,5 +70,11 @@ class JacksonSerializer {
 
     private static JsonNode getRequiredAt(JsonNode body, JsonPointer recordsPointer) {
         return JSON_ROOT.equals(recordsPointer) ? body : body.requiredAt(recordsPointer);
+    }
+
+    public static Optional<JsonNode> getAt(JsonNode node, JsonPointer pointer) {
+        return JSON_ROOT.equals(pointer)
+                ? ofNullable(node)
+                : ofNullable(node.at(pointer)).filter(n -> !n.isMissingNode());
     }
 }

@@ -9,9 +9,9 @@ package com.github.castorm.kafka.connect.http.record;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,18 +20,17 @@ package com.github.castorm.kafka.connect.http.record;
  * #L%
  */
 
-import com.github.castorm.kafka.connect.http.record.spi.SourceRecordSorter;
-import lombok.RequiredArgsConstructor;
-import org.apache.kafka.connect.source.SourceRecord;
+import static com.github.castorm.kafka.connect.http.record.OrderDirectionSourceRecordSorter.OrderDirection.ASC;
+import static com.github.castorm.kafka.connect.http.record.OrderDirectionSourceRecordSorter.OrderDirection.DESC;
+import static java.util.Collections.reverse;
 
+import com.github.castorm.kafka.connect.http.record.spi.SourceRecordSorter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-
-import static com.github.castorm.kafka.connect.http.record.OrderDirectionSourceRecordSorter.OrderDirection.ASC;
-import static com.github.castorm.kafka.connect.http.record.OrderDirectionSourceRecordSorter.OrderDirection.DESC;
-import static java.util.Collections.reverse;
+import lombok.RequiredArgsConstructor;
+import org.apache.kafka.connect.source.SourceRecord;
 
 @RequiredArgsConstructor
 public class OrderDirectionSourceRecordSorter implements SourceRecordSorter {
@@ -78,6 +77,8 @@ public class OrderDirectionSourceRecordSorter implements SourceRecordSorter {
     }
 
     public enum OrderDirection {
-        ASC, DESC, IMPLICIT
+        ASC,
+        DESC,
+        IMPLICIT
     }
 }

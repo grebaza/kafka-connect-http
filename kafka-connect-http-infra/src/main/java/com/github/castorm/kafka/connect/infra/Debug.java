@@ -1,14 +1,13 @@
 package com.github.castorm.kafka.connect.infra;
 
+import static com.github.castorm.kafka.connect.ConnectorUtils.readFile;
+import static java.lang.Thread.sleep;
+
 import com.github.castorm.kafka.connect.infra.client.KafkaClient;
 import com.github.castorm.kafka.connect.infra.client.KafkaConnectClient;
 import io.reactivex.rxjava3.disposables.Disposable;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-
 import java.util.Map;
-
-import static com.github.castorm.kafka.connect.ConnectorUtils.readFile;
-import static java.lang.Thread.sleep;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public class Debug {
 
@@ -42,8 +41,7 @@ public class Debug {
 
     private static Disposable subscribeToTopic(String kafkaBootstrapServers, String topic) {
         KafkaClient kafkaClient = new KafkaClient(kafkaBootstrapServers);
-        return kafkaClient.observeTopic(topic)
-                .subscribe(Debug::printRecord);
+        return kafkaClient.observeTopic(topic).subscribe(Debug::printRecord);
     }
 
     private static void printRecord(ConsumerRecord<String, String> record) {

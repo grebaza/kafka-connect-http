@@ -20,15 +20,14 @@ package com.github.castorm.kafka.connect.http.auth;
  * #L%
  */
 
+import static org.apache.kafka.common.config.ConfigDef.Importance.HIGH;
+import static org.apache.kafka.common.config.ConfigDef.Type.STRING;
+
+import java.util.Map;
 import lombok.Getter;
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.types.Password;
-
-import java.util.Map;
-
-import static org.apache.kafka.common.config.ConfigDef.Importance.HIGH;
-import static org.apache.kafka.common.config.ConfigDef.Type.STRING;
 
 @Getter
 public class BasicHttpAuthenticatorConfig extends AbstractConfig {

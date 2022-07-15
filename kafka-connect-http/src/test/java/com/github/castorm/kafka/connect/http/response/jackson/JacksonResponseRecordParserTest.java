@@ -9,9 +9,9 @@ package com.github.castorm.kafka.connect.http.response.jackson;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,20 +19,6 @@ package com.github.castorm.kafka.connect.http.response.jackson;
  * limitations under the License.
  * #L%
  */
-
-import com.fasterxml.jackson.core.JsonPointer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
-import lombok.SneakyThrows;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
-import java.util.stream.Stream;
 
 import static com.fasterxml.jackson.core.JsonPointer.compile;
 import static com.github.castorm.kafka.connect.http.response.jackson.JacksonRecordParserTest.Fixture.deserialize;
@@ -45,6 +31,19 @@ import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+
+import com.fasterxml.jackson.core.JsonPointer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
+import java.util.stream.Stream;
+import lombok.SneakyThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class JacksonResponseRecordParserTest {
@@ -81,7 +80,8 @@ class JacksonResponseRecordParserTest {
         givenRecords(deserialize(item1));
         given(recordParser.getKey(deserialize(item1))).willReturn(Optional.of("value"));
 
-        assertThat(parser.getRecords(itemArray.getBytes()).findFirst().get().getKey()).isEqualTo("value");
+        assertThat(parser.getRecords(itemArray.getBytes()).findFirst().get().getKey())
+                .isEqualTo("value");
     }
 
     @Test
@@ -90,7 +90,8 @@ class JacksonResponseRecordParserTest {
         givenRecords(deserialize(item1));
         given(recordParser.getKey(deserialize(item1))).willReturn(Optional.empty());
 
-        assertThat(parser.getRecords(itemArray.getBytes()).findFirst().get().getKey()).isNull();
+        assertThat(parser.getRecords(itemArray.getBytes()).findFirst().get().getKey())
+                .isNull();
     }
 
     @Test
@@ -99,7 +100,8 @@ class JacksonResponseRecordParserTest {
         givenRecords(deserialize(item1));
         given(recordParser.getTimestamp(deserialize(item1))).willReturn(Optional.of("value"));
 
-        assertThat(parser.getRecords(itemArray.getBytes()).findFirst().get().getTimestamp()).isEqualTo("value");
+        assertThat(parser.getRecords(itemArray.getBytes()).findFirst().get().getTimestamp())
+                .isEqualTo("value");
     }
 
     @Test
@@ -108,7 +110,8 @@ class JacksonResponseRecordParserTest {
         givenRecords(deserialize(item1));
         given(recordParser.getTimestamp(deserialize(item1))).willReturn(Optional.empty());
 
-        assertThat(parser.getRecords(itemArray.getBytes()).findFirst().get().getTimestamp()).isNull();
+        assertThat(parser.getRecords(itemArray.getBytes()).findFirst().get().getTimestamp())
+                .isNull();
     }
 
     @Test
@@ -117,7 +120,8 @@ class JacksonResponseRecordParserTest {
         givenRecords(deserialize(item1));
         given(recordParser.getOffset(deserialize(item1))).willReturn(ImmutableMap.of("k", "v"));
 
-        assertThat(parser.getRecords(itemArray.getBytes()).findFirst().get().getOffset()).isEqualTo(ImmutableMap.of("k", "v"));
+        assertThat(parser.getRecords(itemArray.getBytes()).findFirst().get().getOffset())
+                .isEqualTo(ImmutableMap.of("k", "v"));
     }
 
     @Test
@@ -126,7 +130,8 @@ class JacksonResponseRecordParserTest {
         givenRecords(deserialize(item1));
         given(recordParser.getValue(deserialize(item1))).willReturn("value");
 
-        assertThat(parser.getRecords(itemArray.getBytes()).findFirst().get().getBody()).isEqualTo("value");
+        assertThat(parser.getRecords(itemArray.getBytes()).findFirst().get().getBody())
+                .isEqualTo("value");
     }
 
     private void givenRecords(JsonNode... records) {

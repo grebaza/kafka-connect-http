@@ -20,15 +20,14 @@ package com.github.castorm.kafka.connect.http.record;
  * #L%
  */
 
+import static org.apache.kafka.common.config.ConfigDef.Importance.LOW;
+import static org.apache.kafka.common.config.ConfigDef.Type.STRING;
+
 import com.github.castorm.kafka.connect.http.record.OrderDirectionSourceRecordSorter.OrderDirection;
+import java.util.Map;
 import lombok.Getter;
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.ConfigDef;
-
-import java.util.Map;
-
-import static org.apache.kafka.common.config.ConfigDef.Importance.LOW;
-import static org.apache.kafka.common.config.ConfigDef.Type.STRING;
 
 @Getter
 public class OrderDirectionSourceRecordSorterConfig extends AbstractConfig {
@@ -44,6 +43,11 @@ public class OrderDirectionSourceRecordSorterConfig extends AbstractConfig {
 
     public static ConfigDef config() {
         return new ConfigDef()
-                .define(ORDER_DIRECTION, STRING, "IMPLICIT", LOW, "Order direction of the results in the list, either ASC, DESC or IMPLICIT");
+                .define(
+                        ORDER_DIRECTION,
+                        STRING,
+                        "IMPLICIT",
+                        LOW,
+                        "Order direction of the results in the list, either ASC, DESC or IMPLICIT");
     }
 }

@@ -20,17 +20,16 @@ package com.github.castorm.kafka.connect.infra;
  * #L%
  */
 
+import static org.testcontainers.containers.BindMode.READ_ONLY;
+import static org.testcontainers.containers.Network.newNetwork;
+import static org.testcontainers.utility.DockerImageName.parse;
+
+import java.time.Duration;
+import java.util.stream.Stream;
 import lombok.Getter;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.Network;
-
-import java.time.Duration;
-import java.util.stream.Stream;
-
-import static org.testcontainers.containers.BindMode.READ_ONLY;
-import static org.testcontainers.containers.Network.newNetwork;
-import static org.testcontainers.utility.DockerImageName.parse;
 
 @Getter
 public class KafkaConnectInfra {
@@ -51,7 +50,8 @@ public class KafkaConnectInfra {
         kafkaConnect = new KafkaConnectContainer(parse("confluentinc/cp-kafka-connect:6.0.1"))
                 .withNetwork(network)
                 .withBootstrapServers("PLAINTEXT://kafka:9092")
-                .withFileSystemBind("target/kafka-connect-http", "/etc/kafka-connect/plugins/kafka-connect-http", READ_ONLY)
+                .withFileSystemBind(
+                        "target/kafka-connect-http", "/etc/kafka-connect/plugins/kafka-connect-http", READ_ONLY)
                 .withStartupTimeout(Duration.ofMinutes(3));
     }
 
@@ -59,9 +59,11 @@ public class KafkaConnectInfra {
         kafka.start();
         kafkaConnect.start();
         kafkaConnect.waitingUntilReady();
-        System.out.println("Kafka Connect cluster is ready" +
-                "\n  REST API: http://" + getKafkaConnectExternalRestUrl() +
-                "\n  Debug Agent: " + getKafkaConnectExternalDebugUrl());
+        System.out.println("Kafka Connect cluster is ready"
+                + "\n  REST API: http://"
+                + getKafkaConnectExternalRestUrl()
+                + "\n  Debug Agent: "
+                + getKafkaConnectExternalDebugUrl());
         return this;
     }
 

@@ -20,6 +20,12 @@ package com.github.castorm.kafka.connect.http;
  * #L%
  */
 
+import static com.github.castorm.kafka.connect.common.ConfigUtils.breakDownMap;
+import static org.apache.kafka.common.config.ConfigDef.Importance.HIGH;
+import static org.apache.kafka.common.config.ConfigDef.Importance.LOW;
+import static org.apache.kafka.common.config.ConfigDef.Type.CLASS;
+import static org.apache.kafka.common.config.ConfigDef.Type.STRING;
+
 import com.github.castorm.kafka.connect.http.client.okhttp.OkHttpClient;
 import com.github.castorm.kafka.connect.http.client.spi.HttpClient;
 import com.github.castorm.kafka.connect.http.record.OffsetRecordFilterFactory;
@@ -33,17 +39,10 @@ import com.github.castorm.kafka.connect.http.response.spi.HttpResponseParser;
 import com.github.castorm.kafka.connect.timer.AdaptableIntervalTimer;
 import com.github.castorm.kafka.connect.timer.TimerThrottler;
 import com.github.castorm.kafka.connect.timer.spi.Timer;
+import java.util.Map;
 import lombok.Getter;
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.ConfigDef;
-
-import java.util.Map;
-
-import static com.github.castorm.kafka.connect.common.ConfigUtils.breakDownMap;
-import static org.apache.kafka.common.config.ConfigDef.Importance.HIGH;
-import static org.apache.kafka.common.config.ConfigDef.Importance.LOW;
-import static org.apache.kafka.common.config.ConfigDef.Type.CLASS;
-import static org.apache.kafka.common.config.ConfigDef.Type.STRING;
 
 @Getter
 class HttpSourceConnectorConfig extends AbstractConfig {
@@ -83,7 +82,12 @@ class HttpSourceConnectorConfig extends AbstractConfig {
                 .define(REQUEST_FACTORY, CLASS, TemplateHttpRequestFactory.class, HIGH, "Request Factory Class")
                 .define(RESPONSE_PARSER, CLASS, PolicyHttpResponseParser.class, HIGH, "Response Parser Class")
                 .define(RECORD_SORTER, CLASS, OrderDirectionSourceRecordSorter.class, LOW, "Record Sorter Class")
-                .define(RECORD_FILTER_FACTORY, CLASS, OffsetRecordFilterFactory.class, LOW, "Record Filter Factory Class")
+                .define(
+                        RECORD_FILTER_FACTORY,
+                        CLASS,
+                        OffsetRecordFilterFactory.class,
+                        LOW,
+                        "Record Filter Factory Class")
                 .define(OFFSET_INITIAL, STRING, "", HIGH, "Starting offset");
     }
 }

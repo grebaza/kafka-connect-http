@@ -23,10 +23,9 @@ package com.github.castorm.kafka.connect.timer;
 import com.github.castorm.kafka.connect.timer.spi.Sleeper;
 import com.github.castorm.kafka.connect.timer.spi.Throttler;
 import com.github.castorm.kafka.connect.timer.spi.Timer;
+import java.time.Instant;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-
-import java.time.Instant;
 
 @RequiredArgsConstructor
 public class TimerThrottler implements Throttler {
@@ -43,8 +42,7 @@ public class TimerThrottler implements Throttler {
     @Override
     public void throttle() throws InterruptedException {
         Long remainingMillis = timer.getRemainingMillis();
-        if (remainingMillis > 0)
-            sleeper.sleep(remainingMillis);
+        if (remainingMillis > 0) sleeper.sleep(remainingMillis);
     }
 
     public void throttle(Instant lastZero) throws InterruptedException {

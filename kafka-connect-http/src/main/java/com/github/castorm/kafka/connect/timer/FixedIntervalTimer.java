@@ -20,17 +20,16 @@ package com.github.castorm.kafka.connect.timer;
  * #L%
  */
 
-import com.github.castorm.kafka.connect.timer.spi.Timer;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import static java.lang.Math.max;
+import static java.lang.System.currentTimeMillis;
 
+import com.github.castorm.kafka.connect.timer.spi.Timer;
 import java.time.Instant;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import static java.lang.Math.max;
-import static java.lang.System.currentTimeMillis;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class FixedIntervalTimer implements Timer {
@@ -50,7 +49,9 @@ public class FixedIntervalTimer implements Timer {
         this(configFactory, System::currentTimeMillis);
     }
 
-    FixedIntervalTimer(Function<Map<String, ?>, FixedIntervalTimerConfig> configFactory, Supplier<Long> lastPollMillisInitializer) {
+    FixedIntervalTimer(
+            Function<Map<String, ?>, FixedIntervalTimerConfig> configFactory,
+            Supplier<Long> lastPollMillisInitializer) {
         this.configFactory = configFactory;
         this.lastPollMillis = lastPollMillisInitializer.get();
     }

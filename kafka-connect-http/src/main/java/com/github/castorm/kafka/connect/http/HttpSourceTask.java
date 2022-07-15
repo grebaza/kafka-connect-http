@@ -20,17 +20,33 @@ package com.github.castorm.kafka.connect.http;
  * #L%
  */
 
+import static com.github.castorm.kafka.connect.common.CollectionUtils.merge;
+import static com.github.castorm.kafka.connect.common.VersionUtils.getVersion;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+
 import com.github.castorm.kafka.connect.http.ack.ConfirmationWindow;
 import com.github.castorm.kafka.connect.http.client.spi.HttpClient;
 import com.github.castorm.kafka.connect.http.model.HttpRequest;
 import com.github.castorm.kafka.connect.http.model.HttpResponse;
 import com.github.castorm.kafka.connect.http.model.Offset;
+import com.github.castorm.kafka.connect.http.model.ParsedResponse;
+import com.github.castorm.kafka.connect.http.model.RequestInput;
 import com.github.castorm.kafka.connect.http.record.spi.SourceRecordFilterFactory;
 import com.github.castorm.kafka.connect.http.record.spi.SourceRecordSorter;
 import com.github.castorm.kafka.connect.http.request.spi.HttpRequestFactory;
 import com.github.castorm.kafka.connect.http.response.spi.HttpResponseParser;
 import com.github.castorm.kafka.connect.timer.TimerThrottler;
 import edu.emory.mathcs.backport.java.util.Collections;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -38,20 +54,9 @@ import org.apache.kafka.connect.errors.RetriableException;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.apache.kafka.connect.source.SourceTask;
 
-import java.io.IOException;
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-
-import static com.github.castorm.kafka.connect.common.VersionUtils.getVersion;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
-
 @Slf4j
 public class HttpSourceTask extends SourceTask {
+    private static final String RECORD_0_KEY = "rec1_offset";
 
     private final Function<Map<String, String>, HttpSourceConnectorConfig> configFactory;
 
@@ -69,8 +74,13 @@ public class HttpSourceTask extends SourceTask {
 
     private ConfirmationWindow<Map<String, ?>> confirmationWindow = new ConfirmationWindow<>(emptyList());
 
+    /**
+     * confirmed record offset
+     */
     @Getter
     private Offset offset;
+
+    private ParsedResponse parsedResponse = ParsedResponse.of();
 
     HttpSourceTask(Function<Map<String, String>, HttpSourceConnectorConfig> configFactory) {
         this.configFactory = configFactory;
@@ -95,7 +105,8 @@ public class HttpSourceTask extends SourceTask {
     }
 
     private Offset loadOffset(Map<String, String> initialOffset) {
-        Map<String, Object> restoredOffset = ofNullable(context.offsetStorageReader().offset(emptyMap())).orElseGet(Collections::emptyMap);
+        Map<String, Object> restoredOffset =
+                ofNullable(context.offsetStorageReader().offset(emptyMap())).orElseGet(Collections::emptyMap);
         return Offset.of(!restoredOffset.isEmpty() ? restoredOffset : initialOffset);
     }
 
@@ -104,17 +115,27 @@ public class HttpSourceTask extends SourceTask {
 
         throttler.throttle(offset.getTimestamp().orElseGet(Instant::now));
 
-        HttpRequest request = requestFactory.createRequest(offset);
+        RequestInput requestInput = createRequestInputFromConfirmedOffsetAndParsedResponse();
+
+        HttpRequest request = requestFactory.createRequest(requestInput);
 
         HttpResponse response = execute(request);
 
-        List<SourceRecord> records = responseParser.parse(response);
+        parsedResponse = responseParser.parse(response);
 
-        List<SourceRecord> unseenRecords = recordSorter.sort(records).stream()
+        log.debug("Task {} parsed response {}", context.configs().get("name"), parsedResponse);
+
+        List<SourceRecord> unseenRecords = recordSorter.sort(parsedResponse.getRecords()).stream()
                 .filter(recordFilterFactory.create(offset))
                 .collect(toList());
 
-        log.info("Request for offset {} yields {}/{} new records", offset.toMap(), unseenRecords.size(), records.size());
+        log.info(
+                "Task {} request {} yields {}/{} new records and paging {}",
+                context.configs().get("name"),
+                requestInput,
+                unseenRecords.size(),
+                parsedResponse.getRecords().size(),
+                parsedResponse.getPaging());
 
         confirmationWindow = new ConfirmationWindow<>(extractOffsets(unseenRecords));
 
@@ -129,10 +150,22 @@ public class HttpSourceTask extends SourceTask {
         }
     }
 
+    private RequestInput createRequestInputFromConfirmedOffsetAndParsedResponse() {
+        final Map<String, ?> metadata;
+
+        if (!parsedResponse.getRecords().isEmpty()) {
+            metadata = merge((Map<String, Object>) parsedResponse.getMetadata(), (Map<String, Object>)
+                    Stream.of(parsedResponse.getRecords().get(0).sourceOffset())
+                            .collect(toMap(i -> RECORD_0_KEY, i -> (Object) i, (i1, i2) -> i1)));
+        } else {
+            metadata = parsedResponse.getMetadata();
+        }
+
+        return RequestInput.of(offset, parsedResponse.getPaging(), metadata);
+    }
+
     private static List<Map<String, ?>> extractOffsets(List<SourceRecord> recordsToSend) {
-        return recordsToSend.stream()
-                .map(SourceRecord::sourceOffset)
-                .collect(toList());
+        return recordsToSend.stream().map(SourceRecord::sourceOffset).collect(toList());
     }
 
     @Override
@@ -142,9 +175,7 @@ public class HttpSourceTask extends SourceTask {
 
     @Override
     public void commit() {
-        offset = confirmationWindow.getLowWatermarkOffset()
-                .map(Offset::of)
-                .orElse(offset);
+        offset = confirmationWindow.getLowWatermarkOffset().map(Offset::of).orElse(offset);
 
         log.debug("Offset set to {}", offset);
     }

@@ -20,33 +20,10 @@ package com.github.castorm.kafka.connect.http;
  * #L%
  */
 
-import com.github.castorm.kafka.connect.http.client.spi.HttpClient;
-import com.github.castorm.kafka.connect.http.model.HttpRequest;
-import com.github.castorm.kafka.connect.http.model.HttpResponse;
-import com.github.castorm.kafka.connect.http.model.Offset;
-import com.github.castorm.kafka.connect.http.record.spi.SourceRecordFilterFactory;
-import com.github.castorm.kafka.connect.http.record.spi.SourceRecordSorter;
-import com.github.castorm.kafka.connect.http.request.spi.HttpRequestFactory;
-import com.github.castorm.kafka.connect.http.response.spi.HttpResponseParser;
-import com.github.castorm.kafka.connect.timer.TimerThrottler;
-import com.google.common.collect.ImmutableMap;
-import org.apache.kafka.connect.errors.RetriableException;
-import org.apache.kafka.connect.source.SourceRecord;
-import org.apache.kafka.connect.source.SourceTaskContext;
-import org.apache.kafka.connect.storage.OffsetStorageReader;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.io.IOException;
-import java.time.Instant;
-import java.util.Map;
-
 import static com.github.castorm.kafka.connect.http.HttpSourceTaskTest.Fixture.offset;
 import static com.github.castorm.kafka.connect.http.HttpSourceTaskTest.Fixture.offsetInitialMap;
 import static com.github.castorm.kafka.connect.http.HttpSourceTaskTest.Fixture.offsetMap;
+import static com.github.castorm.kafka.connect.http.HttpSourceTaskTest.Fixture.parsedResponse;
 import static com.github.castorm.kafka.connect.http.HttpSourceTaskTest.Fixture.record;
 import static com.github.castorm.kafka.connect.http.HttpSourceTaskTest.Fixture.request;
 import static com.github.castorm.kafka.connect.http.HttpSourceTaskTest.Fixture.response;
@@ -59,8 +36,32 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verifyNoInteractions;
+
+import com.github.castorm.kafka.connect.http.client.spi.HttpClient;
+import com.github.castorm.kafka.connect.http.model.HttpRequest;
+import com.github.castorm.kafka.connect.http.model.HttpResponse;
+import com.github.castorm.kafka.connect.http.model.Offset;
+import com.github.castorm.kafka.connect.http.model.ParsedResponse;
+import com.github.castorm.kafka.connect.http.model.RequestInput;
+import com.github.castorm.kafka.connect.http.record.spi.SourceRecordFilterFactory;
+import com.github.castorm.kafka.connect.http.record.spi.SourceRecordSorter;
+import com.github.castorm.kafka.connect.http.request.spi.HttpRequestFactory;
+import com.github.castorm.kafka.connect.http.response.spi.HttpResponseParser;
+import com.github.castorm.kafka.connect.timer.TimerThrottler;
+import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.Map;
+import org.apache.kafka.connect.errors.RetriableException;
+import org.apache.kafka.connect.source.SourceRecord;
+import org.apache.kafka.connect.source.SourceTaskContext;
+import org.apache.kafka.connect.storage.OffsetStorageReader;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class HttpSourceTaskTest {
@@ -192,10 +193,10 @@ class HttpSourceTaskTest {
 
         givenTaskConfiguration();
         task.initialize(getContext(offsetMap));
-        task.start(emptyMap());
-        given(requestFactory.createRequest(offset)).willReturn(request);
+        task.start(emptyMap()); // here task.offset received offsetMap
+        given(requestFactory.createRequest(any())).willReturn(request);
         given(client.execute(request)).willReturn(response);
-        given(responseParser.parse(response)).willReturn(asList(record(offsetMap)));
+        given(responseParser.parse(response)).willReturn(parsedResponse(offsetMap));
         given(recordFilterFactory.create(offset)).willReturn(__ -> true);
 
         task.poll();
@@ -209,9 +210,9 @@ class HttpSourceTaskTest {
         givenTaskConfiguration();
         task.initialize(getContext(offsetMap));
         task.start(emptyMap());
-        given(requestFactory.createRequest(offset)).willReturn(request);
+        given(requestFactory.createRequest(any())).willReturn(request);
         given(client.execute(request)).willReturn(response);
-        given(responseParser.parse(response)).willReturn(asList(record(offsetMap)));
+        given(responseParser.parse(response)).willReturn(parsedResponse(offsetMap));
         given(recordSorter.sort(asList(record(offsetMap)))).willReturn(asList(record(offsetMap)));
         given(recordFilterFactory.create(offset)).willReturn(__ -> true);
 
@@ -224,10 +225,11 @@ class HttpSourceTaskTest {
         givenTaskConfiguration();
         task.initialize(getContext(offsetMap));
         task.start(emptyMap());
-        given(requestFactory.createRequest(offset)).willReturn(request);
+        given(requestFactory.createRequest(any())).willReturn(request);
         given(client.execute(request)).willReturn(response);
-        given(responseParser.parse(response)).willReturn(asList(record(offsetMap)));
-        given(recordSorter.sort(asList(record(offsetMap)))).willReturn(asList(record(offsetMap(1)), record(offsetMap(2))));
+        given(responseParser.parse(response)).willReturn(parsedResponse(offsetMap));
+        given(recordSorter.sort(asList(record(offsetMap))))
+                .willReturn(asList(record(offsetMap(1)), record(offsetMap(2))));
         given(recordFilterFactory.create(offset)).willReturn(__ -> true);
 
         assertThat(task.poll()).containsExactly(record(offsetMap(1)), record(offsetMap(2)));
@@ -239,9 +241,9 @@ class HttpSourceTaskTest {
         givenTaskConfiguration();
         task.initialize(getContext(offsetMap));
         task.start(emptyMap());
-        given(requestFactory.createRequest(offset)).willReturn(request);
+        given(requestFactory.createRequest(any())).willReturn(request);
         given(client.execute(request)).willReturn(response);
-        given(responseParser.parse(response)).willReturn(asList(record(offsetMap)));
+        given(responseParser.parse(response)).willReturn(parsedResponse(offsetMap));
         given(recordFilterFactory.create(offset)).willReturn(__ -> false);
 
         assertThat(task.poll()).isEmpty();
@@ -253,9 +255,9 @@ class HttpSourceTaskTest {
         givenTaskConfiguration();
         task.initialize(getContext(offsetMap));
         task.start(emptyMap());
-        given(requestFactory.createRequest(offset)).willReturn(request);
+        given(requestFactory.createRequest(any())).willReturn(request);
         given(client.execute(request)).willReturn(response);
-        given(responseParser.parse(response)).willReturn(asList(record(offsetMap)));
+        given(responseParser.parse(response)).willReturn(parsedResponse(offsetMap));
         given(recordSorter.sort(asList(record(offsetMap))))
                 .willReturn(asList(record(offsetMap(1)), record(offsetMap(2)), record(offsetMap(3))));
         given(recordFilterFactory.create(offset)).willReturn(__ -> true);
@@ -275,7 +277,7 @@ class HttpSourceTaskTest {
         givenTaskConfiguration();
         task.initialize(getContext(offsetMap));
         task.start(emptyMap());
-        given(requestFactory.createRequest(offset)).willReturn(request);
+        given(requestFactory.createRequest(any())).willReturn(request);
         given(client.execute(request)).willThrow(new IOException());
 
         assertThat(catchThrowable(() -> task.poll())).isInstanceOf(RetriableException.class);
@@ -301,6 +303,7 @@ class HttpSourceTaskTest {
         Map<String, Object> offsetMap = ImmutableMap.of("custom", "value", "key", key, "timestamp", now.toString());
         Map<String, String> offsetInitialMap = ImmutableMap.of("k2", "v2");
         Offset offset = Offset.of(offsetMap);
+        RequestInput requestInput = RequestInput.of(offset, emptyMap(), emptyMap());
         HttpRequest request = HttpRequest.builder().build();
         HttpResponse response = HttpResponse.builder().build();
 
@@ -310,6 +313,10 @@ class HttpSourceTaskTest {
 
         static SourceRecord record(Map<String, Object> offset) {
             return new SourceRecord(emptyMap(), offset, null, null, null, null, null, null, now.toEpochMilli());
+        }
+
+        static ParsedResponse parsedResponse(Map<String, Object> offset) {
+            return ParsedResponse.of(asList(record(offset)));
         }
     }
 }

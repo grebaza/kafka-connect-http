@@ -9,9 +9,9 @@ package com.github.castorm.kafka.connect.http.record;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,14 +19,6 @@ package com.github.castorm.kafka.connect.http.record;
  * limitations under the License.
  * #L%
  */
-
-import com.github.castorm.kafka.connect.http.model.Offset;
-import org.apache.kafka.connect.source.SourceRecord;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Instant;
 
 import static com.github.castorm.kafka.connect.http.record.OffsetTimestampRecordFilterFactoryTest.Fixture.key;
 import static com.github.castorm.kafka.connect.http.record.OffsetTimestampRecordFilterFactoryTest.Fixture.now;
@@ -36,6 +28,13 @@ import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.github.castorm.kafka.connect.http.model.Offset;
+import java.time.Instant;
+import org.apache.kafka.connect.source.SourceRecord;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 @ExtendWith(MockitoExtension.class)
 class OffsetTimestampRecordFilterFactoryTest {
 
@@ -43,12 +42,14 @@ class OffsetTimestampRecordFilterFactoryTest {
 
     @Test
     void givenOffset_whenTestEarlier_thenFalse() {
-        assertThat(factory.create(Offset.of(emptyMap(), key, now)).test(record(now.minus(1, MINUTES)))).isFalse();
+        assertThat(factory.create(Offset.of(emptyMap(), key, now)).test(record(now.minus(1, MINUTES))))
+                .isFalse();
     }
 
     @Test
     void givenOffset_whenTestLater_thenTrue() {
-        assertThat(factory.create(Offset.of(emptyMap(), key, now)).test(record(now.plus(1, MINUTES)))).isTrue();
+        assertThat(factory.create(Offset.of(emptyMap(), key, now)).test(record(now.plus(1, MINUTES))))
+                .isTrue();
     }
 
     interface Fixture {

@@ -9,9 +9,9 @@ package com.github.castorm.kafka.connect.http.response;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,29 +20,31 @@ package com.github.castorm.kafka.connect.http.response;
  * #L%
  */
 
-import com.github.castorm.kafka.connect.http.model.HttpResponse;
-import com.github.castorm.kafka.connect.http.response.spi.HttpResponseParser;
-import com.github.castorm.kafka.connect.http.response.spi.HttpResponsePolicy;
-import com.google.common.collect.ImmutableList;
-import org.apache.kafka.connect.source.SourceRecord;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
+import static com.github.castorm.kafka.connect.http.response.PolicyHttpResponseParserTest.Fixture.parsedResponse;
 import static com.github.castorm.kafka.connect.http.response.PolicyHttpResponseParserTest.Fixture.record;
 import static com.github.castorm.kafka.connect.http.response.PolicyHttpResponseParserTest.Fixture.response;
 import static com.github.castorm.kafka.connect.http.response.spi.HttpResponsePolicy.HttpResponseOutcome.FAIL;
 import static com.github.castorm.kafka.connect.http.response.spi.HttpResponsePolicy.HttpResponseOutcome.PROCESS;
 import static com.github.castorm.kafka.connect.http.response.spi.HttpResponsePolicy.HttpResponseOutcome.SKIP;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
+
+import com.github.castorm.kafka.connect.http.model.HttpResponse;
+import com.github.castorm.kafka.connect.http.model.ParsedResponse;
+import com.github.castorm.kafka.connect.http.response.spi.HttpResponseParser;
+import com.github.castorm.kafka.connect.http.response.spi.HttpResponsePolicy;
+import org.apache.kafka.connect.source.SourceRecord;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class PolicyHttpResponseParserTest {
@@ -99,9 +101,9 @@ class PolicyHttpResponseParserTest {
 
         given(policy.resolve(response)).willReturn(PROCESS);
 
-        given(delegate.parse(response)).willReturn(ImmutableList.of(record));
+        given(delegate.parse(response)).willReturn(parsedResponse);
 
-        assertThat(parser.parse(response)).containsExactly(record);
+        assertThat(parser.parse(response).getRecords()).containsExactly(record);
     }
 
     @Test
@@ -119,11 +121,12 @@ class PolicyHttpResponseParserTest {
 
         given(policy.resolve(response)).willReturn(SKIP);
 
-        assertThat(parser.parse(response)).isEmpty();
+        assertThat(parser.parse(response).getRecords()).isEmpty();
     }
 
     interface Fixture {
         HttpResponse response = HttpResponse.builder().build();
         SourceRecord record = new SourceRecord(null, null, null, null, "Something");
+        ParsedResponse parsedResponse = ParsedResponse.of(singletonList(record));
     }
 }

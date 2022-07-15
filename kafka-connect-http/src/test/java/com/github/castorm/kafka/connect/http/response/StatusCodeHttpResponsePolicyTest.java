@@ -9,9 +9,9 @@ package com.github.castorm.kafka.connect.http.response;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,15 +19,6 @@ package com.github.castorm.kafka.connect.http.response;
  * limitations under the License.
  * #L%
  */
-
-import com.github.castorm.kafka.connect.http.model.HttpResponse;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.stream.Stream;
 
 import static com.github.castorm.kafka.connect.http.response.StatusCodeHttpResponsePolicyTest.Fixture.code;
 import static com.github.castorm.kafka.connect.http.response.StatusCodeHttpResponsePolicyTest.Fixture.response;
@@ -39,6 +30,14 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+
+import com.github.castorm.kafka.connect.http.model.HttpResponse;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class StatusCodeHttpResponsePolicyTest {

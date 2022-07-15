@@ -20,17 +20,16 @@ package com.github.castorm.kafka.connect.http.ack;
  * #L%
  */
 
-import com.google.common.collect.ImmutableMap;
-import org.junit.jupiter.api.Test;
-
-import java.time.Instant;
-import java.util.Map;
-
 import static com.github.castorm.kafka.connect.http.ack.ConfirmationWindowTest.Fixture.offsetMap;
 import static java.time.Instant.now;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.google.common.collect.ImmutableMap;
+import java.time.Instant;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
 class ConfirmationWindowTest {
 

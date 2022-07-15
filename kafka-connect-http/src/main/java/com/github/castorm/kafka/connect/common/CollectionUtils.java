@@ -20,22 +20,20 @@ package com.github.castorm.kafka.connect.common;
  * #L%
  */
 
-import lombok.experimental.UtilityClass;
+import static java.util.stream.Collectors.toMap;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collector;
-
-import static java.util.stream.Collectors.toMap;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class CollectionUtils {
 
     public static <T, K, U> Collector<T, ?, LinkedHashMap<K, U>> toLinkedHashMap(
-            Function<? super T, ? extends K> keyMapper,
-            Function<? super T, ? extends U> valueMapper) {
+            Function<? super T, ? extends K> keyMapper, Function<? super T, ? extends U> valueMapper) {
 
         return toMap(
                 keyMapper,
@@ -43,8 +41,7 @@ public class CollectionUtils {
                 (u, v) -> {
                     throw new IllegalStateException(String.format("Duplicate key %s", u));
                 },
-                LinkedHashMap::new
-        );
+                LinkedHashMap::new);
     }
 
     public static <S, T> Map<S, T> merge(Map<S, T> mapA, Map<S, T> mapB) {

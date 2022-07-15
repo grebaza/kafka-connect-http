@@ -20,6 +20,11 @@ package com.github.castorm.kafka.connect.timer;
  * #L%
  */
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
+
 import com.github.castorm.kafka.connect.timer.spi.Sleeper;
 import com.github.castorm.kafka.connect.timer.spi.Timer;
 import org.junit.jupiter.api.Test;
@@ -27,11 +32,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class TimerThrottlerTest {

@@ -20,16 +20,6 @@ package com.github.castorm.kafka.connect.timer;
  * #L%
  */
 
-import com.github.castorm.kafka.connect.http.model.Offset;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Map;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 import static com.github.castorm.kafka.connect.timer.FixedIntervalTimerTest.Fixture.intervalMillis;
 import static com.github.castorm.kafka.connect.timer.FixedIntervalTimerTest.Fixture.lastPollMillis;
 import static com.github.castorm.kafka.connect.timer.FixedIntervalTimerTest.Fixture.maxExecutionTimeMillis;
@@ -39,6 +29,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+
+import com.github.castorm.kafka.connect.http.model.Offset;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class FixedIntervalTimerTest {

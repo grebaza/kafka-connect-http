@@ -9,9 +9,9 @@ package com.github.castorm.kafka.connect.http;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,16 +20,15 @@ package com.github.castorm.kafka.connect.http;
  * #L%
  */
 
-import org.apache.kafka.common.config.ConfigDef;
-import org.apache.kafka.connect.connector.Task;
-import org.apache.kafka.connect.source.SourceConnector;
-
-import java.util.List;
-import java.util.Map;
-
 import static com.github.castorm.kafka.connect.common.VersionUtils.getVersion;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
+
+import java.util.List;
+import java.util.Map;
+import org.apache.kafka.common.config.ConfigDef;
+import org.apache.kafka.connect.connector.Task;
+import org.apache.kafka.connect.source.SourceConnector;
 
 public class HttpSourceConnector extends SourceConnector {
 
@@ -57,9 +56,7 @@ public class HttpSourceConnector extends SourceConnector {
 
     @Override
     public List<Map<String, String>> taskConfigs(int maxTasks) {
-        return range(0, maxTasks).boxed()
-                .map(__ -> settings)
-                .collect(toList());
+        return range(0, maxTasks).boxed().map(__ -> settings).collect(toList());
     }
 
     @Override

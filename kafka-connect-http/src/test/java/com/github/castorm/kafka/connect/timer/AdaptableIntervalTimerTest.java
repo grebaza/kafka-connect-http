@@ -20,14 +20,6 @@ package com.github.castorm.kafka.connect.timer;
  * #L%
  */
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Instant;
-
 import static com.github.castorm.kafka.connect.timer.AdaptableIntervalTimerTest.Fixture.intervalMillis;
 import static com.github.castorm.kafka.connect.timer.AdaptableIntervalTimerTest.Fixture.now;
 import static java.time.Instant.now;
@@ -36,6 +28,13 @@ import static java.util.Collections.emptyMap;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
+
+import java.time.Instant;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class AdaptableIntervalTimerTest {

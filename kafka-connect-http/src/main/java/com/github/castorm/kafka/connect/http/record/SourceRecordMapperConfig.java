@@ -20,14 +20,13 @@ package com.github.castorm.kafka.connect.http.record;
  * #L%
  */
 
+import static org.apache.kafka.common.config.ConfigDef.Importance.HIGH;
+import static org.apache.kafka.common.config.ConfigDef.Type.STRING;
+
+import java.util.Map;
 import lombok.Getter;
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.ConfigDef;
-
-import java.util.Map;
-
-import static org.apache.kafka.common.config.ConfigDef.Importance.HIGH;
-import static org.apache.kafka.common.config.ConfigDef.Type.STRING;
 
 @Getter
 public class SourceRecordMapperConfig extends AbstractConfig {
@@ -42,7 +41,6 @@ public class SourceRecordMapperConfig extends AbstractConfig {
     }
 
     public static ConfigDef config() {
-        return new ConfigDef()
-                .define(TOPIC, STRING, HIGH, "Kafka Topic");
+        return new ConfigDef().define(TOPIC, STRING, HIGH, "Kafka Topic");
     }
 }

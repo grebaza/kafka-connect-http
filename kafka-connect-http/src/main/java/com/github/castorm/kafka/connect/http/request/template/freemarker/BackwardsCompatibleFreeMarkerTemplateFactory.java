@@ -20,33 +20,34 @@ package com.github.castorm.kafka.connect.http.request.template.freemarker;
  * #L%
  */
 
-import com.github.castorm.kafka.connect.http.model.Offset;
+import static java.util.UUID.randomUUID;
+
+import com.github.castorm.kafka.connect.http.model.RequestInput;
 import com.github.castorm.kafka.connect.http.request.template.spi.Template;
 import com.github.castorm.kafka.connect.http.request.template.spi.TemplateFactory;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 import freemarker.template.Version;
-import lombok.SneakyThrows;
-
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
-
-import static java.util.UUID.randomUUID;
+import lombok.SneakyThrows;
 
 @Deprecated
 public class BackwardsCompatibleFreeMarkerTemplateFactory implements TemplateFactory {
 
-    private final Configuration configuration = new Configuration(new Version(2, 3, 30)) {{
-        setNumberFormat("computer");
-    }};
+    private final Configuration configuration = new Configuration(new Version(2, 3, 30)) {
+        {
+            setNumberFormat("computer");
+        }
+    };
 
     @Override
     public Template create(String template) {
-        return offset -> apply(createTemplate(template), createModel(offset));
+        return request -> apply(createTemplate(template), createModel(request));
     }
 
     @SneakyThrows(IOException.class)
@@ -54,9 +55,11 @@ public class BackwardsCompatibleFreeMarkerTemplateFactory implements TemplateFac
         return new freemarker.template.Template(randomUUID().toString(), new StringReader(template), configuration);
     }
 
-    private static Map<String, Object> createModel(Offset offset) {
-        Map<String, Object> model = new HashMap<>(offset.toMap());
-        model.put("offset", offset.toMap());
+    private static Map<String, Object> createModel(RequestInput request) {
+        Map<String, Object> model = new HashMap<>(request.getOffset());
+        model.put("offset", request.getOffset());
+        model.put("paging", request.getPaging());
+        model.put("metadata", request.getMetadata());
         return model;
     }
 
