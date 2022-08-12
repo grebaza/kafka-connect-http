@@ -45,6 +45,8 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import lombok.Getter;
@@ -72,15 +74,29 @@ public class HttpSourceTask extends SourceTask {
 
     private SourceRecordFilterFactory recordFilterFactory;
 
-    private ConfirmationWindow<Map<String, ?>> confirmationWindow = new ConfirmationWindow<>(emptyList());
+    private volatile ConfirmationWindow<Map<String, ?>> confirmationWindow = new ConfirmationWindow<>(emptyList());
+
+    protected static enum State {
+        RUNNING,
+        STOPPED;
+    }
+
+    private final AtomicReference<State> state = new AtomicReference<State>(State.STOPPED);
+
+    /**
+     * used to ensure that start(), stop() and commit() calls are serialized.
+     */
+    private final ReentrantLock stateLock = new ReentrantLock();
 
     /**
      * confirmed record offset
      */
     @Getter
-    private Offset offset;
+    private volatile Offset offset;
 
     private ParsedResponse parsedResponse = ParsedResponse.of();
+
+    private volatile String taskName;
 
     HttpSourceTask(Function<Map<String, String>, HttpSourceConnectorConfig> configFactory) {
         this.configFactory = configFactory;
@@ -92,16 +108,26 @@ public class HttpSourceTask extends SourceTask {
 
     @Override
     public void start(Map<String, String> settings) {
+        stateLock.lock();
 
-        HttpSourceConnectorConfig config = configFactory.apply(settings);
+        try {
+            taskName = context == null ? null : context.configs().get("name");
+            if (!state.compareAndSet(State.STOPPED, State.RUNNING)) {
+                log.info("Task {} Connector has already been started", taskName);
+                return;
+            }
+            HttpSourceConnectorConfig config = configFactory.apply(settings);
 
-        throttler = config.getThrottler();
-        requestFactory = config.getRequestFactory();
-        requestExecutor = config.getClient();
-        responseParser = config.getResponseParser();
-        recordSorter = config.getRecordSorter();
-        recordFilterFactory = config.getRecordFilterFactory();
-        offset = loadOffset(config.getInitialOffset());
+            throttler = config.getThrottler();
+            requestFactory = config.getRequestFactory();
+            requestExecutor = config.getClient();
+            responseParser = config.getResponseParser();
+            recordSorter = config.getRecordSorter();
+            recordFilterFactory = config.getRecordFilterFactory();
+            offset = loadOffset(config.getInitialOffset());
+        } finally {
+            stateLock.unlock();
+        }
     }
 
     private Offset loadOffset(Map<String, String> initialOffset) {
@@ -123,15 +149,15 @@ public class HttpSourceTask extends SourceTask {
 
         parsedResponse = responseParser.parse(response);
 
-        log.debug("Task {} parsed response {}", context.configs().get("name"), parsedResponse);
+        log.debug("Task {} parsed response {}", taskName, parsedResponse);
 
-        List<SourceRecord> unseenRecords = recordSorter.sort(parsedResponse.getRecords()).stream()
+        final List<SourceRecord> unseenRecords = recordSorter.sort(parsedResponse.getRecords()).stream()
                 .filter(recordFilterFactory.create(offset))
                 .collect(toList());
 
         log.info(
                 "Task {} request {} yields {}/{} new records and paging {}",
-                context.configs().get("name"),
+                taskName,
                 requestInput,
                 unseenRecords.size(),
                 parsedResponse.getRecords().size(),
@@ -175,14 +201,39 @@ public class HttpSourceTask extends SourceTask {
 
     @Override
     public void commit() {
-        offset = confirmationWindow.getLowWatermarkOffset().map(Offset::of).orElse(offset);
+        boolean locked = stateLock.tryLock();
 
-        log.debug("Offset set to {}", offset);
+        if (locked) {
+            try {
+                offset = confirmationWindow
+                        .getLowWatermarkOffset()
+                        .map(Offset::of)
+                        .orElse(offset);
+                log.debug("Task {} Offset set to {}", taskName, offset);
+            } finally {
+                stateLock.unlock();
+            }
+        } else {
+            log.warn(
+                    "Task {} couldn't commit processed log positions with the "
+                            + "source http due to a concurrent connector shutdown or restart",
+                    taskName);
+        }
     }
 
     @Override
     public void stop() {
-        // Nothing to do, no resources to release
+        stateLock.lock();
+
+        try {
+            if (!state.compareAndSet(State.RUNNING, State.STOPPED)) {
+                log.info("Task {} Connector has already been stopped", taskName);
+                return;
+            }
+            log.info("Task {} Stopping down connector", taskName);
+        } finally {
+            stateLock.unlock();
+        }
     }
 
     @Override
